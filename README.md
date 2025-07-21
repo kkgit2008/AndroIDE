@@ -3,16 +3,20 @@
 
 * Fork this repo
 
-* Before build, add a tag in release page like 'v2.7.1-beta' (see all [tags](https://repo.maven.apache.org/maven2/com/itsaky/androidide/gradle-plugin/maven-metadata.xml) 
+* Before build, add a tag in release page like 'v2.7.1-beta'
+(see all [tags](https://repo.maven.apache.org/maven2/com/itsaky/androidide/gradle-plugin/maven-metadata.xml) 
 , DO NOT FORGET THE 'v' TAG BEFORE VERSION NAME! )
 , and click the 'Target' button, then click 'Recent Commits', and choose the latest commit, submite the release.
 <br></br>
-** if not : "FAILURE: Could not find com.itsaky.androidide:gradle-plugin:2.7.1-beta3."
-<br>** or </br>
-** if not : "FAILURE: Cannot extract simple version name. Invalid version string 'v1.0.0'. Version names must be SEMVER with 'v' prefix"
+*** if not : "FAILURE: Could not find com.itsaky.androidide:gradle-plugin:2.7.1-beta3."
+<br>
+*** or ***
+</br>
+*** if not : "FAILURE: Invalid version string 'v1.0.0-SNAPSHOT' . Version must follow MAJOR.MINOR.PATCH format (e.g. '1.2.3' or 'v1.2.3-alpha')"
 
-* Then run it on 'main' branch (see all [SNAPSHOTS](https://s01.oss.sonatype.org/content/repositories/snapshots/com/itsaky/androidide/gradle-plugin/maven-metadata.xml) )<br></br>
-** if not : "FAILURE: Could not find com.itsaky.androidide:gradle-plugin:1.0.0-internal-12345abcd-SNAPSHOT"
+* Then run it on 'main' branch
+*** if not : "FAILURE: Could not find com.itsaky.androidide:gradle-plugin:1.0.0-internal-12345abcd-SNAPSHOT"
+(see all [SNAPSHOTS](https://s01.oss.sonatype.org/content/repositories/snapshots/com/itsaky/androidide/gradle-plugin/maven-metadata.xml) )<br></br>
 
 <p></p>
 
