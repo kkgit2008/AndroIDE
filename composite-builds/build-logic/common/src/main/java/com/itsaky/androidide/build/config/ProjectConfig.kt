@@ -143,7 +143,7 @@ val Project.downloadVersion: String
 
       println("---------")
       print("DownloadVersion value is: ")
-      print(publishingVersion)
+      println(publishingVersion)
       println("---------")
 
       return publishingVersion
@@ -151,7 +151,7 @@ val Project.downloadVersion: String
 
       println("---------")
       print("downloadVersion value is : ")
-      print(VersionUtils.getLatestSnapshotVersion("gradle-plugin"))
+      println(VersionUtils.getLatestSnapshotVersion("gradle-plugin"))
       println("---------")
 
       // sometimes, when working locally, Gradle fails to download the latest snapshot version
