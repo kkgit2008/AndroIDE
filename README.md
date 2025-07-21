@@ -1,15 +1,15 @@
 
 # HOW TO BUILD
 
-* Fork this repo.
+* Fork this repo
 
-* Before build, add a tag in release page like 'v2.7.1-beta'(see all [tags](https://repo.maven.apache.org/maven2/com/itsaky/androidide/gradle-plugin/maven-metadata.xml) )
+* Before build, add a tag in release page like 'v2.7.1-beta' (see all [tags](https://repo.maven.apache.org/maven2/com/itsaky/androidide/gradle-plugin/maven-metadata.xml) )
 <br></br>
 ** "FAILURE: Could not find com.itsaky.androidide:gradle-plugin:2.7.1-beta3."
 <br>** or </br>
 ** "FAILURE: Cannot extract simple version name. Invalid version string 'v1.0.0'. Version names must be SEMVER with 'v' prefix"
 
-* Then run it on 'main' branch.(see all [SNAPSHOTS](https://s01.oss.sonatype.org/content/repositories/snapshots/com/itsaky/androidide/gradle-plugin/maven-metadata.xml) )<br></br>
+* Then run it on 'main' branch (see all [SNAPSHOTS](https://s01.oss.sonatype.org/content/repositories/snapshots/com/itsaky/androidide/gradle-plugin/maven-metadata.xml) )<br></br>
 ** "FAILURE: Could not find com.itsaky.androidide:gradle-plugin:1.0.0-internal-12345abcd-SNAPSHOT"
 
 <p></p>
