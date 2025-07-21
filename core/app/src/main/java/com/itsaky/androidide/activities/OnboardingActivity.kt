@@ -179,7 +179,7 @@ class OnboardingActivity : AppIntro2() {
   private fun isSetupCompleted(): Boolean {
     return checkToolsIsInstalled()
         && StatPreferences.statConsentDialogShown
-        && PermissionsFragment.areAllPermissionsGranted(this)
+        //&& PermissionsFragment.areAllPermissionsGranted(this)
   }
 
   private fun tryNavigateToMainIfSetupIsCompleted(): Boolean {
