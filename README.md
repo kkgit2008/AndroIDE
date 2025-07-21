@@ -10,8 +10,8 @@
 ** if not : "FAILURE: Could not find com.itsaky.androidide:gradle-plugin:2.7.1-beta3."<br></br>
 ** if not : "FAILURE: Invalid version string 'v1.0.0-SNAPSHOT' . Version must follow MAJOR.MINOR.PATCH format (e.g. '1.2.3' or 'v1.2.3-alpha')"
 
-* Then run it on 'main' branch
-*** if not : "FAILURE: Could not find com.itsaky.androidide:gradle-plugin:1.0.0-internal-12345abcd-SNAPSHOT"
+* Then run it on 'main' branch <br></br>
+** if not : "FAILURE: Could not find com.itsaky.androidide:gradle-plugin:1.0.0-internal-12345abcd-SNAPSHOT"
 (see all [SNAPSHOTS](https://s01.oss.sonatype.org/content/repositories/snapshots/com/itsaky/androidide/gradle-plugin/maven-metadata.xml) )<br></br>
 
 <p></p>
