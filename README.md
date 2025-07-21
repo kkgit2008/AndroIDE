@@ -9,8 +9,7 @@
 , and click the 'Target' button, then click 'Recent Commits', and choose the latest commit, submite the release.
 <br></br>
 ** if not : "FAILURE: Could not find com.itsaky.androidide:gradle-plugin:2.7.1-beta3."
-<br></br>
-** or **
+
 <br></br>
 ** if not : "FAILURE: Invalid version string 'v1.0.0-SNAPSHOT' . Version must follow MAJOR.MINOR.PATCH format (e.g. '1.2.3' or 'v1.2.3-alpha')"
 
