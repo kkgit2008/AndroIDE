@@ -142,16 +142,16 @@ val Project.downloadVersion: String
     if (CI.isCiBuild || isFDroidBuild) {
 
       println("---------")
-      println("downloadVersion value is: ")
-      println(publishingVersion)
+      print("DownloadVersion value is: ")
+      print(publishingVersion)
       println("---------")
 
       return publishingVersion
     } else {
 
       println("---------")
-      println("downloadVersion value is: ")
-      println(VersionUtils.getLatestSnapshotVersion("gradle-plugin"))
+      print("downloadVersion value is : ")
+      print(VersionUtils.getLatestSnapshotVersion("gradle-plugin"))
       println("---------")
 
       // sometimes, when working locally, Gradle fails to download the latest snapshot version
