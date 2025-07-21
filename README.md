@@ -3,8 +3,9 @@
 
 * Fork this repo
 
-* Before build, add a tag in release page like 'v2.7.1-beta' (see all [tags](https://repo.maven.apache.org/maven2/com/itsaky/androidide/gradle-plugin/maven-metadata.xml) , DO NOT FORGET THE 'v' TAG BEFORE VERSION NAME! )
-,and click the 'Target' button ,then click 'Recent Commits', and choose the latest commit, submite the release.
+* Before build, add a tag in release page like 'v2.7.1-beta' (see all [tags](https://repo.maven.apache.org/maven2/com/itsaky/androidide/gradle-plugin/maven-metadata.xml) 
+, DO NOT FORGET THE 'v' TAG BEFORE VERSION NAME! )
+, and click the 'Target' button, then click 'Recent Commits', and choose the latest commit, submite the release.
 <br></br>
 ** if not : "FAILURE: Could not find com.itsaky.androidide:gradle-plugin:2.7.1-beta3."
 <br>** or </br>
