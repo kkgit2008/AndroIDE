@@ -1,7 +1,7 @@
 
 # HOW TO BUILD
 
-### Just fork this repo, and write your code. 
+* Fork this repo.
 
 * Before build, add a tag like 'v2.7.1-beta'(see all [tags](https://repo.maven.apache.org/maven2/com/itsaky/androidide/gradle-plugin/maven-metadata.xml) in release page.
 <br></br>
@@ -11,8 +11,7 @@
 * Then run it on 'main' branch.(see all [SNAPSHOTS](https://s01.oss.sonatype.org/content/repositories/snapshots/com/itsaky/androidide/gradle-plugin/maven-metadata.xml) <br></br>
 ** ("FAILURE: Could not find com.itsaky.androidide:gradle-plugin:1.0.0-internal-12345abcd-SNAPSHOT")
 
-<p>
-</p>
+<p></p>
 
 
 
