@@ -21,6 +21,9 @@ import com.itsaky.androidide.build.config.BuildConfig
 import com.itsaky.androidide.desugaring.utils.JavaIOReplacements.applyJavaIOReplacements
 import com.itsaky.androidide.plugins.AndroidIDEAssetsPlugin
 
+import java.io.FileInputStream
+import java.util.Properties
+
 plugins {
   id("com.itsaky.androidide.core-app")
   id("com.android.application")
@@ -44,6 +47,50 @@ buildscript {
 
 android {
   namespace = BuildConfig.packageName
+
+    // ****** 设置自定义签名 ******
+    signingConfigs {
+        create("releaseee") {
+            val localProperties = Properties()
+            val localPropertiesFile = rootProject.file("local.properties")
+            enableV1Signing = true // 启用 V1 签名
+            enableV2Signing = true // 启用 V2 签名 (推荐，Android 7.0+)
+            enableV3Signing = true // 启用 V3 签名 (推荐，Android 9+)
+            if (localPropertiesFile.exists()) {
+                localProperties.load(FileInputStream(localPropertiesFile))
+
+                val storeFilePath = localProperties.getProperty("storeFile")
+                val storePasswordValue = localProperties.getProperty("storePassword")
+                val keyAliasValue = localProperties.getProperty("keyAlias")
+                val keyPasswordValue = localProperties.getProperty("keyPassword")
+
+                if (storeFilePath != null && storePasswordValue != null && 
+                    keyAliasValue != null && keyPasswordValue != null) {
+                    storeFile = file(storeFilePath)
+                    storePassword = storePasswordValue
+                    keyAlias = keyAliasValue
+                    keyPassword = keyPasswordValue
+                } else {
+                    logger.error("There is sth wrong with file content:local.properties !")
+                }
+            } else {
+                logger.error("File not exist:local.properties !")
+            }
+        }
+    }
+
+        buildTypes {
+            debug {
+                signingConfig = signingConfigs.getByName("releaseee")
+                //applicationIdSuffix '.debug'
+                versionNameSuffix = "-debug"
+            }
+            release {
+                signingConfig = signingConfigs.getByName("releaseee")
+
+            }
+        }
+    // ****** 设置自定义签名 ******
 
   defaultConfig {
     applicationId = BuildConfig.packageName

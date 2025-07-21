@@ -1,0 +1,24 @@
+name: Clear Gradle Version Cache
+
+on:
+  workflow_dispatch: { }
+
+jobs:
+  clear_cache:
+    name: Force-clear Gradle cache
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4  
+        # 必须步骤，否则没有gradlew文件
+
+      - name: Make gradlew executable
+        run: chmod +x ./gradlew
+
+      - name: Nuclear clean
+        run: |
+          # 强制刷新所有依赖
+          ./gradlew clean --refresh-dependencies
+          
+          # 可选：额外清理Gradle全局缓存（激进清理，耗费时间较长）
+          #rm -rf ~/.gradle/caches/

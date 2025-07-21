@@ -453,7 +453,7 @@
   <string name="permission_desc_install_packages">允许 AndroidIDE 安装其构建的应用程序。</string>
   <string name="permission_title_install_packages">安装软件包</string>
   <string name="onboarding_title_permissions">权限</string>
-  <string name="onboarding_subtitle_permissions">AndroidIDE 需要以下权限</string>
+  <string name="onboarding_subtitle_permissions">AndroidIDE 需要以下权限\n\n(强烈建议授予全部权限后再点击下一页按钮！虽然并非强制授权)</string>
   <string name="msg_grant_permissions">请授予权限以继续。</string>
   <string name="msg_no_internet">您似乎已离线，检查您的互联网连接。</string>
   <string name="msg_connected_to_cellular">注意！您正在使用蜂窝移动数据。</string>

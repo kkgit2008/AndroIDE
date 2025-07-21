@@ -61,13 +61,17 @@ val Project.simpleVersionName: String
     }
 
     val version = rootProject.version.toString()
-    val regex = Regex("^v\\d+\\.?\\d+\\.?\\d+-\\w+")
+    // 修改后的正则：强制匹配 SEMVER 格式（允许但不建议使用 'v' 前缀）
+    val regex = Regex("^v?(\\d+\\.\\d+\\.\\d+(?:-\\w+)?)$")
 
-    val simpleVersion = regex.find(version)?.value?.substring(1)?.also {
+    val simpleVersion = regex.find(version)?.let { match ->
+     // 无论是否有 'v' 前缀，都返回无前缀的版本号
+     match.groupValues[1].also {
       if (shouldPrintVersionName) {
         logger.warn("Simple version name is '$it' (from version $version)")
         shouldPrintVersionName = false
       }
+     }
     }
 
     if (simpleVersion == null) {
@@ -76,7 +80,7 @@ val Project.simpleVersionName: String
       }
 
       throw IllegalStateException(
-        "Cannot extract simple version name. Invalid version string '$version'. Version names must be SEMVER with 'v' prefix"
+        "Invalid version string '$version'. Version must follow MAJOR.MINOR.PATCH format (e.g. '1.2.3' or 'v1.2.3-alpha')"
       )
     }
 
@@ -88,17 +92,22 @@ val Project.projectVersionCode: Int
   get() {
 
     val version = simpleVersionName
-    val regex = Regex("^\\d+\\.?\\d+\\.?\\d+")
+    val regex = Regex("^\\d+\\.\\d+\\.\\d+")
 
     val versionCode = regex.find(version)?.value?.replace(".", "")?.toInt()?.also {
       if (shouldPrintVersionCode) {
-        logger.warn("Version code is '$it' (from version ${version}).")
+        logger.warn("Version code generated: '$it' (from version '$version').")
         shouldPrintVersionCode = false
       }
     }
       ?: throw IllegalStateException(
-        "Cannot extract version code. Invalid version string '$version'. Version names must be SEMVER with 'v' prefix"
-      )
+      """
+      Failed to generate version code from version '$version'.
+      Required format: MAJOR.MINOR.PATCH (e.g. '1.2.3' or '2.0.0-beta')
+      Current simpleVersionName: ${simpleVersionName}
+      """
+      .trimIndent()
+    )
 
     return versionCode
   }
@@ -130,11 +139,23 @@ val Project.publishingVersion: String
  */
 val Project.downloadVersion: String
   get() {
-    return if (CI.isCiBuild || isFDroidBuild) {
-      publishingVersion
+    if (CI.isCiBuild || isFDroidBuild) {
+
+      println("---------")
+      print("DownloadVersion value is: ")
+      println(publishingVersion)
+      println("---------")
+
+      return publishingVersion
     } else {
+
+      println("---------")
+      print("downloadVersion value is : ")
+      println(VersionUtils.getLatestSnapshotVersion("gradle-plugin"))
+      println("---------")
+
       // sometimes, when working locally, Gradle fails to download the latest snapshot version
       // this may cause issues while initializing the project in AndroidIDE
-      VersionUtils.getLatestSnapshotVersion("gradle-plugin")
+      return VersionUtils.getLatestSnapshotVersion("gradle-plugin")
     }
   }
