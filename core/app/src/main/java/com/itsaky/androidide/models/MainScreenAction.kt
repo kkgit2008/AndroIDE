@@ -46,7 +46,9 @@ constructor(
     const val ACTION_OPEN_TERMINAL = 3
     const val ACTION_PREFERENCES = 4
     const val ACTION_DONATE = 5
-    const val ACTION_DOCS = 6
+    const val ACTION_DOCS = 
+    
+    const val ACTION_EXIT = 7
 
     /**
      * Get all main screen actions.
@@ -90,6 +92,11 @@ constructor(
           R.string.btn_docs,
           R.drawable.ic_docs)
 
+        val exit = MainScreenAction(
+          ACTION_EXIT,
+          "exit >>",
+          R.drawable.ic_terminal)
+
         Collections.addAll(this,
           createProject,
           openProject,
@@ -97,7 +104,8 @@ constructor(
           openTerminal,
           preferences,
           donate,
-          docs
+          docs,
+          exit
         )
       }
     }
