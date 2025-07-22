@@ -43,10 +43,26 @@ import com.itsaky.androidide.viewmodel.MainViewModel.Companion.SCREEN_TEMPLATE_D
 import com.itsaky.androidide.viewmodel.MainViewModel.Companion.SCREEN_TEMPLATE_LIST
 import java.io.File
 
+import android.os.Build
+import android.os.Handler
+import android.os.Looper
+
 class MainActivity : EdgeToEdgeIDEActivity() {
 
   private val viewModel by viewModels<MainViewModel>()
   private var _binding: ActivityMainBinding? = null
+
+    fun exitApp() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+            finishAndRemoveTask()
+        } else {
+            finishAffinity()
+        }
+        
+        Handler(Looper.getMainLooper()).postDelayed({
+            android.os.Process.killProcess(android.os.Process.myPid())
+        }, 500)
+    }
 
   private val onBackPressedCallback = object : OnBackPressedCallback(true) {
     override fun handleOnBackPressed() {
