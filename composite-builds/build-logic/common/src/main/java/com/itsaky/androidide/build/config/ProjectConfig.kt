@@ -51,40 +51,44 @@ val Project.isFDroidBuild: Boolean
 val Project.simpleVersionName: String
   get() {
 
-    if (!CI.isGitRepo) {
-      if (shouldPrintNotAGitRepoWarning) {
-        logger.warn("Unable to infer version name. The build is not running on a git repository.")
-        shouldPrintNotAGitRepoWarning = false
-      }
+//     if (!CI.isGitRepo) {
+//       if (shouldPrintNotAGitRepoWarning) {
+//         logger.warn("Unable to infer version name. The build is not running on a git repository.")
+//         shouldPrintNotAGitRepoWarning = false
+//       }
+// 
+//       return "1.0.0-beta"
+//     }
+// 
+//     val version = rootProject.version.toString()
+//     // 修改后的正则：强制匹配 SEMVER 格式（允许但不建议使用 'v' 前缀）
+//     val regex = Regex("^v?(\\d+\\.\\d+\\.\\d+(?:-\\w+)?)$")
+// 
+//     val simpleVersion = regex.find(version)?.let { match ->
+//      // 无论是否有 'v' 前缀，都返回无前缀的版本号
+//      match.groupValues[1].also {
+//       if (shouldPrintVersionName) {
+//         logger.warn("Simple version name is '$it' (from version $version)")
+//         shouldPrintVersionName = false
+//       }
+//      }
+//     }
+// 
+//     if (simpleVersion == null) {
+//       if (CI.isTestEnv) {
+//         return "1.0.0-beta"
+//       }
+// 
+//       throw IllegalStateException(
+//         "Invalid version string '$version'. Version must follow MAJOR.MINOR.PATCH format (e.g. '1.2.3' or 'v1.2.3-alpha')"
+//       )
+//     }
+// 
+//     return simpleVersion
+//   }
 
-      return "1.0.0-beta"
-    }
-
-    val version = rootProject.version.toString()
-    // 修改后的正则：强制匹配 SEMVER 格式（允许但不建议使用 'v' 前缀）
-    val regex = Regex("^v?(\\d+\\.\\d+\\.\\d+(?:-\\w+)?)$")
-
-    val simpleVersion = regex.find(version)?.let { match ->
-     // 无论是否有 'v' 前缀，都返回无前缀的版本号
-     match.groupValues[1].also {
-      if (shouldPrintVersionName) {
-        logger.warn("Simple version name is '$it' (from version $version)")
-        shouldPrintVersionName = false
-      }
-     }
-    }
-
-    if (simpleVersion == null) {
-      if (CI.isTestEnv) {
-        return "1.0.0-beta"
-      }
-
-      throw IllegalStateException(
-        "Invalid version string '$version'. Version must follow MAJOR.MINOR.PATCH format (e.g. '1.2.3' or 'v1.2.3-alpha')"
-      )
-    }
-
-    return simpleVersion
+    logger.warn("Using hardcoded version: com.itsaky.androidide:gradle-plugin:0.7.1-beta")
+    return "0.7.1-beta"
   }
 
 private var shouldPrintVersionCode = true
