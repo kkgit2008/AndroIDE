@@ -1,3 +1,31 @@
+
+# HOW TO BUILD
+
+* Fork this repo.
+
+* Run it on 'main' branch.
+
+* If you want, you can edit app version from 
+<a href="./composite-builds/build-logic/common/src/main/java/com/itsaky/androidide/build/config/ProjectConfig.kt">here </a>
+.
+
+<p> </p>
+
+**
+see all [SNAPSHOTS](https://s01.oss.sonatype.org/content/repositories/snapshots/com/itsaky/androidide/gradle-plugin/maven-metadata.xml) ,
+see all [tags](https://repo.maven.apache.org/maven2/com/itsaky/androidide/gradle-plugin/maven-metadata.xml)
+**
+
+<br> </br>
+
+<p> </p>
+
+
+
+
+
+
+
 <p align="center">
   <img src="./images/icon.png" alt="AndroidIDE" width="80" height="80"/>
 </p>
