@@ -94,7 +94,7 @@ constructor(
 
         val exit = MainScreenAction(
           ACTION_EXIT,
-          "exit >>",
+          R.string.btn_exit,
           R.drawable.ic_terminal)
 
         Collections.addAll(this,
