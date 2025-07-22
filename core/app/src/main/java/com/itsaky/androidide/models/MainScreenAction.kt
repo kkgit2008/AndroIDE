@@ -46,7 +46,7 @@ constructor(
     const val ACTION_OPEN_TERMINAL = 3
     const val ACTION_PREFERENCES = 4
     const val ACTION_DONATE = 5
-    const val ACTION_DOCS = 
+    const val ACTION_DOCS = 6
     
     const val ACTION_EXIT = 7
 
