@@ -5,14 +5,14 @@
 
 * Run it on 'main' branch.
 
-<p></p>
+<p> </p>
 
 (see all [SNAPSHOTS](https://s01.oss.sonatype.org/content/repositories/snapshots/com/itsaky/androidide/gradle-plugin/maven-metadata.xml))
 (see all [tags](https://repo.maven.apache.org/maven2/com/itsaky/androidide/gradle-plugin/maven-metadata.xml))
 
-<br></br>
+<br> </br>
 
-<p></p>
+<p> </p>
 
 
 
