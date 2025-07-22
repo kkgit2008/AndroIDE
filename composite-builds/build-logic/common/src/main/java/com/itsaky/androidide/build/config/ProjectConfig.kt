@@ -87,53 +87,54 @@ val Project.simpleVersionName: String
 //     return simpleVersion
 //   }
 
-    logger.warn("Using hardcoded version: com.itsaky.androidide:gradle-plugin:0.7.1-beta")
-    return "0.7.1-beta"
+  //it will not work actually. 
+  return "9.9.9"
   }
 
 private var shouldPrintVersionCode = true
 val Project.projectVersionCode: Int
   get() {
 
-    val version = simpleVersionName
-    val regex = Regex("^\\d+\\.\\d+\\.\\d+")
+//     val version = simpleVersionName
+//     val regex = Regex("^\\d+\\.\\d+\\.\\d+")
+// 
+//     val versionCode = regex.find(version)?.value?.replace(".", "")?.toInt()?.also {
+//       if (shouldPrintVersionCode) {
+//         logger.warn("Version code generated: '$it' (from version '$version').")
+//         shouldPrintVersionCode = false
+//       }
+//     }
+//       ?: throw IllegalStateException(
+//       """
+//       Failed to generate version code from version '$version'.
+//       Required format: MAJOR.MINOR.PATCH (e.g. '1.2.3' or '2.0.0-beta')
+//       Current simpleVersionName: ${simpleVersionName}
+//       """
+//       .trimIndent()
+//     )
 
-    val versionCode = regex.find(version)?.value?.replace(".", "")?.toInt()?.also {
-      if (shouldPrintVersionCode) {
-        logger.warn("Version code generated: '$it' (from version '$version').")
-        shouldPrintVersionCode = false
-      }
-    }
-      ?: throw IllegalStateException(
-      """
-      Failed to generate version code from version '$version'.
-      Required format: MAJOR.MINOR.PATCH (e.g. '1.2.3' or '2.0.0-beta')
-      Current simpleVersionName: ${simpleVersionName}
-      """
-      .trimIndent()
-    )
-
-    return versionCode
+  //return versionCode
+  logger.warn("Using hardcoded app versionCode: 27101")
+  return 27101
   }
 
 val Project.publishingVersion: String
   get() {
 
-    var publishing = simpleVersionName
-    if (isFDroidBuild) {
-      // when building for F-Droid, the release is already published so we should have
-      // the maven dependencies already published
-      // simply return the simple version name here.
-      return publishing
-    }
+//    var publishing = simpleVersionName
+//     if (isFDroidBuild) {
+//       // when building for F-Droid, the release is already published so we should have
+//       // the maven dependencies already published
+//       // simply return the simple version name here.
+//       return publishing
+//     }
+// 
+//     if (CI.isCiBuild && CI.isGitRepo && CI.branchName != "main") {
+//       publishing += "-${CI.commitHash}-SNAPSHOT"
+//     }
 
-    if (CI.isCiBuild && CI.isGitRepo && CI.branchName != "main") {
-      publishing += "-${CI.commitHash}-SNAPSHOT"
-    }
-
-    //hard code app version
-    publishing = "2.7.1-b3"
-    return publishing
+  //app version ???
+  return "2.7.1-b5"
   }
 
 /**
@@ -145,23 +146,25 @@ val Project.publishingVersion: String
  */
 val Project.downloadVersion: String
   get() {
-    if (CI.isCiBuild || isFDroidBuild) {
+//     if (CI.isCiBuild || isFDroidBuild) {
+// 
+//       println("---------")
+//       print("downloadVersion value v1 is: ")
+//       println(publishingVersion)
+//       println("---------")
+// 
+//       return publishingVersion
+//     } else {
+// 
+//       println("---------")
+//       print("downloadVersion value v2 is :")
+//       println(VersionUtils.getLatestSnapshotVersion("gradle-plugin"))
+//       println("---------")
+// 
+//       // sometimes, when working locally, Gradle fails to download the latest snapshot version
+//       // this may cause issues while initializing the project in AndroidIDE
+//       return VersionUtils.getLatestSnapshotVersion("gradle-plugin")
+//     }
 
-      println("---------")
-      print("downloadVersion value v1 is: ")
-      println(publishingVersion)
-      println("---------")
-
-      return publishingVersion
-    } else {
-
-      println("---------")
-      print("downloadVersion value v2 is :")
-      println(VersionUtils.getLatestSnapshotVersion("gradle-plugin"))
-      println("---------")
-
-      // sometimes, when working locally, Gradle fails to download the latest snapshot version
-      // this may cause issues while initializing the project in AndroidIDE
-      return VersionUtils.getLatestSnapshotVersion("gradle-plugin")
-    }
+  return publishingVersion
   }
