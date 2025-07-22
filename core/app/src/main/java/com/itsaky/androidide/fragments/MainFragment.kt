@@ -36,6 +36,10 @@ import org.slf4j.LoggerFactory
 import java.io.File
 import java.util.concurrent.CancellationException
 
+import android.os.Build
+import android.os.Handler
+import android.os.Looper
+
 class MainFragment : BaseFragment() {
 
   private val viewModel by viewModels<MainViewModel>(
@@ -69,6 +73,10 @@ class MainFragment : BaseFragment() {
           MainScreenAction.ACTION_PREFERENCES -> gotoPreferences()
           MainScreenAction.ACTION_DONATE -> BaseApplication.getBaseInstance().openDonationsPage()
           MainScreenAction.ACTION_DOCS -> BaseApplication.getBaseInstance().openDocs()
+          MainScreenAction.ACTION_EXIT -> {
+              (requireActivity() as MainActivity).exitApp()
+          }
+
         }
       }
 
