@@ -5,6 +5,10 @@
 
 * Run it on 'main' branch.
 
+* If you want, you can edit app version from 
+<a href="./composite-builds/build-logic/common/src/main/java/com/itsaky/androidide/build/config/ProjectConfig.kt">here </a>
+.
+
 <p> </p>
 
 **
@@ -12,11 +16,11 @@ see all [SNAPSHOTS](https://s01.oss.sonatype.org/content/repositories/snapshots/
 see all [tags](https://repo.maven.apache.org/maven2/com/itsaky/androidide/gradle-plugin/maven-metadata.xml)
 **
 
-<a href="./README.md">test »</a>
-
 <br> </br>
 
 <p> </p>
+
+
 
 
 
