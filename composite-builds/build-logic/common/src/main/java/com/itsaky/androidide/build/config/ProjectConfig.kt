@@ -88,7 +88,7 @@ val Project.simpleVersionName: String
 //   }
 
   //it will not work actually. 
-  return "9.9.9"
+  return "9.9.9-beta"
   }
 
 private var shouldPrintVersionCode = true
@@ -114,8 +114,8 @@ val Project.projectVersionCode: Int
 //     )
 
   //return versionCode
-  logger.warn("Using hardcoded app versionCode: 27101")
-  return 27101
+  logger.warn("Using hardcoded app versionCode: 271")
+  return 271
   }
 
 val Project.publishingVersion: String
@@ -133,8 +133,8 @@ val Project.publishingVersion: String
 //       publishing += "-${CI.commitHash}-SNAPSHOT"
 //     }
 
-  //app version ???
-  return "2.7.1-b5"
+  //Using hardcoded classpath('com.itsaky.androidide:gradle-plugin:2.7.1-beta')
+  return "2.7.1-beta"
   }
 
 /**
