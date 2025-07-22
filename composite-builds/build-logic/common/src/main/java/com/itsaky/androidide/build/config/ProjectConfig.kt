@@ -131,6 +131,8 @@ val Project.publishingVersion: String
       publishing += "-${CI.commitHash}-SNAPSHOT"
     }
 
+    //hard code app version
+    publishing = "2.7.1-b3"
     return publishing
   }
 
@@ -146,7 +148,7 @@ val Project.downloadVersion: String
     if (CI.isCiBuild || isFDroidBuild) {
 
       println("---------")
-      print("DownloadVersion value is: ")
+      print("downloadVersion value v1 is: ")
       println(publishingVersion)
       println("---------")
 
@@ -154,7 +156,7 @@ val Project.downloadVersion: String
     } else {
 
       println("---------")
-      print("downloadVersion value is : ")
+      print("downloadVersion value v2 is :")
       println(VersionUtils.getLatestSnapshotVersion("gradle-plugin"))
       println("---------")
 
