@@ -87,8 +87,8 @@ val Project.simpleVersionName: String
 //     return simpleVersion
 //   }
 
-  //it will not work actually. 
-  return "9.9.9-beta"
+  ///It will only(maybe) work in 'crash report page' when app crashes. 
+  return "2.7.1-betaX"
   }
 
 private var shouldPrintVersionCode = true
@@ -134,6 +134,7 @@ val Project.publishingVersion: String
 //     }
 
   //Using hardcoded classpath('com.itsaky.androidide:gradle-plugin:2.7.1-beta')
+  //DO NOT MODIFY UNLESS YOU KNOW WHAT YOU ARE DOING!
   return "2.7.1-beta"
   }
 
