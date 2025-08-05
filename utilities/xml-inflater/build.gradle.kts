@@ -27,7 +27,18 @@ plugins {
 
 
 
-android { namespace = "${BuildConfig.packageName}.inflater" }
+android {
+    namespace = "${BuildConfig.packageName}.inflater"
+
+    buildTypes {
+        getByName("release") {
+            //isMinifyEnabled = false
+            consumerProguardFiles("proguard-rules.pro") 
+// 必须用 consumerProguardFiles
+
+        }
+    }
+}
 
 dependencies {
   ksp(projects.annotation.processorsKsp)
