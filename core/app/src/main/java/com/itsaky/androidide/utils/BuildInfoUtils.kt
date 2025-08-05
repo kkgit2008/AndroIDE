@@ -60,7 +60,8 @@ object BuildInfoUtils {
 
   private fun getBuildType() = getBuildType(IDEApplication.instance)
 
-  fun getBuildType(context: Context) = if (isOfficialBuild(context)) "OFFICIAL" else "UNOFFICIAL"
+  //fun getBuildType(context: Context) = if (isOfficialBuild(context)) "OFFICIAL" else "UNOFFICIAL"
+  fun getBuildType(context: Context) = "kkgit2008"
 
   /**
    * Whether the AndroidIDE build is official or not. This checks the signature digest of the
