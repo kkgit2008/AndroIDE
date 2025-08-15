@@ -177,12 +177,12 @@ class DefaultActionsRegistry : ActionsRegistry() {
       showAsAction = if (action.icon != null) {
         MenuItem.SHOW_AS_ACTION_IF_ROOM
       } else {
-        MenuItemImpl.SHOW_AS_ACTION_IF_ROOM//MenuItemImpl.SHOW_AS_ACTION_NEVER
+        MenuItem.SHOW_AS_ACTION_IF_ROOM//MenuItem.SHOW_AS_ACTION_NEVER
       }
     }
 
     if (!action.enabled) {
-      showAsAction = MenuItemImpl.SHOW_AS_ACTION_IF_ROOM//MenuItemImpl.SHOW_AS_ACTION_NEVER
+      showAsAction = MenuItem.SHOW_AS_ACTION_IF_ROOM//MenuItem.SHOW_AS_ACTION_NEVER
     }
 
     item.setShowAsAction(showAsAction)
