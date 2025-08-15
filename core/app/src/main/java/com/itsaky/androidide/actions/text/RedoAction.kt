@@ -67,7 +67,7 @@ class RedoAction(context: Context, override val order: Int) : EditorRelatedActio
     return if (KeyboardUtils.isSoftInputVisible(data.get(Context::class.java) as Activity)) {
       MenuItem.SHOW_AS_ACTION_IF_ROOM
     } else {
-      MenuItem.SHOW_AS_ACTION_NEVER
+      MenuItemImpl.SHOW_AS_ACTION_IF_ROOM//MenuItemImpl.SHOW_AS_ACTION_NEVER
     }
   }
 }
