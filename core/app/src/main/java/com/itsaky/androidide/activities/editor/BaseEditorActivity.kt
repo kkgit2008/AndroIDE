@@ -485,11 +485,11 @@ abstract class BaseEditorActivity : EdgeToEdgeIDEActivity(), TabLayout.OnTabSele
   }
 
   override fun invalidateOptionsMenu() {
-    val mainHandler = ThreadUtils.getMainHandler()
-    optionsMenuInvalidator?.also {
-      mainHandler.removeCallbacks(it)
-      mainHandler.postDelayed(it, OPTIONS_MENU_INVALIDATION_DELAY)
-    }
+//     val mainHandler = ThreadUtils.getMainHandler()
+//     optionsMenuInvalidator?.also {
+//       mainHandler.removeCallbacks(it)
+//       mainHandler.postDelayed(it, OPTIONS_MENU_INVALIDATION_DELAY)
+//     }
   }
 
   override fun onTabSelected(tab: Tab) {
