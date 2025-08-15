@@ -233,12 +233,12 @@ open class EditorHandlerActivity : ProjectHandlerActivity(), IEditorHandler {
           showAsAction = if (action.icon != null) {
             MenuItem.SHOW_AS_ACTION_IF_ROOM
           } else {
-            MenuItem.SHOW_AS_ACTION_NEVER
+            MenuItemImpl.SHOW_AS_ACTION_IF_ROOM//MenuItemImpl.SHOW_AS_ACTION_NEVER
           }
         }
 
         if (!action.enabled) {
-          showAsAction = MenuItem.SHOW_AS_ACTION_NEVER
+          showAsAction = MenuItemImpl.SHOW_AS_ACTION_IF_ROOM//MenuItemImpl.SHOW_AS_ACTION_NEVER
         }
 
         item.setShowAsAction(showAsAction)
