@@ -218,7 +218,8 @@ open class EditorHandlerActivity : ProjectHandlerActivity(), IEditorHandler {
       menu.findItem(action.itemId)?.let { item ->
         action.prepare(data)
 
-        item.isVisible = action.visible
+        //item.isVisible = action.visible
+        item.isVisible = true
         item.isEnabled = action.enabled
         item.title = action.label
 
