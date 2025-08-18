@@ -2,7 +2,7 @@ name: Build and test
 
 on:
   push:
-    branches: [ "dev", "main", "indexing", "release/**" ]
+#    branches: [ "dev", "main", "indexing", "release/**" ]
     paths-ignore:
       - '**.md'
       - 'fastlane/**'
