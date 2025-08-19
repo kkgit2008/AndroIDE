@@ -131,7 +131,10 @@ class DefaultActionsRegistry : ActionsRegistry() {
       action.prepare(data)
 
       if (!action.visible) {
-        continue
+        //continue
+        // 设置不可见动作的状态：可见但不可用
+        action.visible = true  // 强制设置为可见
+        action.enabled = false // 强制设置为不可用
       }
       addActionToMenu(menu, action, data, onClickListener)
     }
@@ -150,6 +153,13 @@ class DefaultActionsRegistry : ActionsRegistry() {
       var shouldBeEnabled = false
       for (subItem in action.children) {
         subItem.prepare(data)
+        
+        if (!subItem.visible) {
+          // 对子菜单项同样设置为可见但不可用
+          subItem.visible = true
+          subItem.enabled = false
+        }
+
         if (subItem.visible) {
           addActionToMenu(sub, subItem, data, onClickListener)
         }
