@@ -120,7 +120,7 @@ class ExtendedMenuToolbar : MaterialToolbar {
     return if (itemImpl.requiresActionButton()) MenuItemImpl.SHOW_AS_ACTION_ALWAYS
       else if (itemImpl.requestsActionButton()) MenuItemImpl.SHOW_AS_ACTION_IF_ROOM
       else if (itemImpl.showsTextAsAction()) MenuItemImpl.SHOW_AS_ACTION_WITH_TEXT
-      else MenuItemImpl.SHOW_AS_ACTION_IF_ROOM//MenuItemImpl.SHOW_AS_ACTION_NEVER
+      else MenuItemImpl.SHOW_AS_ACTION_NEVER
   }
 
 }

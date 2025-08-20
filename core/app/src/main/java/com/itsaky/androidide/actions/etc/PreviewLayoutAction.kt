@@ -76,11 +76,9 @@ class PreviewLayoutAction(context: Context, override val order: Int) : EditorRel
       return
     }
 
-    //visible = type == LAYOUT
-    //enabled = visible
-    visible = true
-    enabled = type == LAYOUT
-  }
+    visible = type == LAYOUT
+    enabled = visible
+  }
 
   override fun getShowAsActionFlags(data: ActionData): Int {
     val activity = data.getActivity() ?: return super.getShowAsActionFlags(data)

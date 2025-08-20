@@ -46,17 +46,11 @@ interface ActionItem {
 
   /**
    * Whether the action should be visible to the user or not.
-   * 保持为var以兼容现有代码，但通过getter强制返回true
    */
   var visible: Boolean
-    get() = true
-    set(value) {
-      // 忽略外部赋值，确保始终可见
-    }
 
   /**
    * Whether the action should be enabled.
-   * 初始值为false，允许外部修改
    */
   var enabled: Boolean
 
@@ -91,14 +85,13 @@ interface ActionItem {
 
   /**
    * Prepare the action. Subclasses can modify the visual properties of this action here.
-   * 强制设置可见性为true，初始禁用状态
+   *
+   * @param data The data containing various information about the event.
    */
   @CallSuper
   fun prepare(data: ActionData) {
-    // 强制可见，覆盖任何可能的修改
     visible = true
-    // 初始禁用，允许后续被其他类启用
-    //enabled = false
+    enabled = true
   }
 
   /**

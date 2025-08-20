@@ -66,6 +66,6 @@ fun ActionData.hasRequiredData(vararg types: Class<*>): Boolean {
 
 /** Marks this action item as invisible. */
 fun ActionItem.markInvisible() {
-  //visible = false
+  visible = false
   enabled = false
 }

@@ -218,8 +218,7 @@ open class EditorHandlerActivity : ProjectHandlerActivity(), IEditorHandler {
       menu.findItem(action.itemId)?.let { item ->
         action.prepare(data)
 
-        //item.isVisible = action.visible
-        item.isVisible = true
+        item.isVisible = action.visible
         item.isEnabled = action.enabled
         item.title = action.label
 
@@ -233,12 +232,12 @@ open class EditorHandlerActivity : ProjectHandlerActivity(), IEditorHandler {
           showAsAction = if (action.icon != null) {
             MenuItem.SHOW_AS_ACTION_IF_ROOM
           } else {
-            MenuItem.SHOW_AS_ACTION_IF_ROOM//MenuItem.SHOW_AS_ACTION_NEVER
+            MenuItem.SHOW_AS_ACTION_NEVER
           }
         }
 
         if (!action.enabled) {
-          showAsAction = MenuItem.SHOW_AS_ACTION_IF_ROOM//MenuItem.SHOW_AS_ACTION_NEVER
+          showAsAction = MenuItem.SHOW_AS_ACTION_NEVER
         }
 
         item.setShowAsAction(showAsAction)
