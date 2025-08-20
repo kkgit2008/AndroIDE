@@ -98,7 +98,7 @@ interface ActionItem {
     // 强制可见，覆盖任何可能的修改
     visible = true
     // 初始禁用，允许后续被其他类启用
-    enabled = false
+    //enabled = false
   }
 
   /**
