@@ -25,9 +25,18 @@
 
 <br> </br>
 
+# Download JDK & SDK & NDK from here:
+## [JDK](https://github.com/kkgit2008/apkxxxAndroidIDE/releases/tag/JDK)
+## [SDK](https://github.com/kkgit2008/apkxxxAndroidIDE/releases/tag/SDK)
+## [NDK](https://github.com/kkgit2008/apkxxxAndroidIDE/releases/tag/NDK)
+
+<br> </br>
+
 # 🔥NOTICE
 
 * Forked from [AndroidIDEOfficial/AndroidIDE](https://github.com/AndroidIDEOfficial/AndroidIDE) 
+
+
 
 <br> </br>
 <br> </br>
