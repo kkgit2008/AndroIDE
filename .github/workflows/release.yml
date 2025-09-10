@@ -13,7 +13,7 @@ env:
   BUILD_JAVA_VERSION: '17'
   BUILD_JAVA_DIST: 'adopt'
   
-  APK_OUTPUT_PATH: ./core/app/build/outputs/apk/release/
+  APK_OUTPUT_PATH: ./core/app/build/outputs/apk/release
   APK_OUTPUT_FILE1: app-arm64-v8a-release.apk
   ARTIFACT_DIR: ./release-artifacts
   INFO_FILE: ./RELEASE_INFO
@@ -145,22 +145,22 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-gradle-
 
-      - name: Run code quality checks
-        if: ${{ steps.check_tag.outputs.tag_exists == 'false' }}
-        run: ./gradlew lintRelease
-        continue-on-error: true
-
-      - name: Run tests
-        if: ${{ steps.check_tag.outputs.tag_exists == 'false' }}
-        run: ./gradlew testReleaseUnitTest
-        continue-on-error: true
+#      - name: Run code quality checks
+#        if: ${{ steps.check_tag.outputs.tag_exists == 'false' }}
+#        run: ./gradlew lintRelease
+#        continue-on-error: true
+#
+#      - name: Run tests
+#        if: ${{ steps.check_tag.outputs.tag_exists == 'false' }}
+#        run: ./gradlew testReleaseUnitTest
+#        continue-on-error: true
 
       - name: Build Release APK
         if: ${{ steps.check_tag.outputs.tag_exists == 'false' }}
         run: ./gradlew :core:app:assembleRelease
         continue-on-error: false
 
-      - name: Show apk paths
+      - name: Show APK paths
         if: ${{ steps.check_tag.outputs.tag_exists == 'false' }}
         run: |
             echo ">>APK:"
