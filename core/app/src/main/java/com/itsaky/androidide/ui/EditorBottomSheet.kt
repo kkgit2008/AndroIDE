@@ -65,8 +65,9 @@ import java.io.IOException
 import java.nio.charset.StandardCharsets
 import java.nio.file.Files
 import java.nio.file.Path
-import java.nio.file.StandardOpenOption.CREATE_NEW
-import java.nio.file.StandardOpenOption.WRITE
+import java.nio.file.StandardOpenOption
+import java.text.SimpleDateFormat
+import java.util.*
 import java.util.concurrent.Callable
 import kotlin.math.roundToInt
 
@@ -82,6 +83,13 @@ constructor(
   defStyleAttr: Int = 0,
   defStyleRes: Int = 0,
 ) : RelativeLayout(context, attrs, defStyleAttr, defStyleRes) {
+
+  // 新增：日志相关变量
+  private val logTag = "EditorBottomSheet"
+  private val logFormatter = SimpleDateFormat("yyyy-MM-dd HH:mm:ss.SSS", Locale.US)
+  private val logFile by lazy {
+    File(context.filesDir, "editor_bottom_sheet_logs.txt")
+  }
 
   private val collapsedHeight: Float by lazy {
     val localContext = getContext() ?: return@lazy 0f
@@ -116,6 +124,8 @@ constructor(
   }
 
   private fun initialize(context: FragmentActivity) {
+    // 新增：记录初始化日志
+    logToFile("Initializing EditorBottomSheet")
 
     val mediator =
       TabLayoutMediator(binding.tabs, binding.pager, true, true) { tab, position ->
@@ -129,6 +139,9 @@ constructor(
     binding.tabs.addOnTabSelectedListener(
       object : OnTabSelectedListener {
         override fun onTabSelected(tab: Tab) {
+          // 新增：记录标签选择日志
+          logToFile("Tab selected: position=${tab.position}, title=${tab.text}")
+          
           val fragment: Fragment = pagerAdapter.getFragmentAtIndex(tab.position)
           if (fragment is ShareableOutputFragment) {
             binding.clearFab.show()
@@ -145,10 +158,14 @@ constructor(
     )
 
     binding.shareOutputFab.setOnClickListener {
+      // 新增：记录分享按钮点击日志
+      logToFile("shareOutputFab clicked")
+      
       val fragment = pagerAdapter.getFragmentAtIndex(binding.tabs.selectedTabPosition)
 
       if (fragment !is ShareableOutputFragment) {
         log.error("Unknown fragment: {}", fragment)
+        logToFile("shareOutputFab clicked but fragment is not ShareableOutputFragment: ${fragment.javaClass.simpleName}")
         return@setOnClickListener
       }
 
@@ -165,12 +182,49 @@ constructor(
 
     TooltipCompat.setTooltipText(binding.clearFab, context.getString(string.title_clear_output))
     binding.clearFab.setOnClickListener {
-      val fragment: Fragment = pagerAdapter.getFragmentAtIndex(binding.tabs.selectedTabPosition)
-      if (fragment !is ShareableOutputFragment) {
-        log.error("Unknown fragment: {}", fragment)
-        return@setOnClickListener
+      // 新增：详细记录清除按钮点击日志
+      logToFile("clearFab clicked, starting clear process")
+      
+      try {
+        // 记录当前选中的标签位置
+        val tabPosition = binding.tabs.selectedTabPosition
+        logToFile("clearFab clicked - selected tab position: $tabPosition")
+        
+        // 获取当前Fragment
+        val fragment: Fragment = pagerAdapter.getFragmentAtIndex(tabPosition)
+        logToFile("clearFab clicked - fragment class: ${fragment.javaClass.name}")
+        
+        // 检查Fragment是否为null
+        if (fragment == null) {
+          log.error("Fragment is null at position $tabPosition")
+          logToFile("clearFab error - fragment is null at position $tabPosition")
+          return@setOnClickListener
+        }
+        
+        // 检查Fragment类型
+        if (fragment !is ShareableOutputFragment) {
+          log.error("Unknown fragment: {}", fragment)
+          logToFile("clearFab error - fragment is not ShareableOutputFragment: ${fragment.javaClass.name}")
+          return@setOnClickListener
+        }
+        
+        // 记录即将调用clearOutput()
+        logToFile("clearFab - calling clearOutput() on ${fragment.javaClass.name}")
+        
+        // 调用清除方法
+        logToFile("clearFab - before calling clearOutput(), fragment is null? ${fragment == null}")
+        logToFile("clearFab - before calling clearOutput(), fragment is ShareableOutputFragment? ${fragment is ShareableOutputFragment}")
+        fragment.clearOutput()
+                
+        // 记录清除成功
+        logToFile("clearFab - clearOutput() completed successfully")
+
+      } catch (t: Throwable) { // 捕获所有 Throwable（包括 Exception 和 Error）
+        log.error("Error when clicking clearFab", t) // 打印完整堆栈到 Logcat
+        logToFile("clearFab click Throwable: ${t.message}\n${getStackTraceString(t)}") // 写入本地日志
+        flashError(context.getString(string.msg_failed_to_clear_output))
+
       }
-      (fragment as ShareableOutputFragment).clearOutput()
     }
 
     binding.headerContainer.setOnClickListener {
@@ -186,8 +240,14 @@ constructor(
   }
 
   init {
+    // 新增：记录初始化日志
+    logToFile("Creating EditorBottomSheet instance")
+    
     if (context !is FragmentActivity) {
-      throw IllegalArgumentException("EditorBottomSheet must be set up with a FragmentActivity")
+      val errorMsg = "EditorBottomSheet must be set up with a FragmentActivity"
+      log.error(errorMsg)
+      logToFile("Initialization error: $errorMsg")
+      throw IllegalArgumentException(errorMsg)
     }
 
     val inflater = LayoutInflater.from(context)
@@ -205,16 +265,20 @@ constructor(
    * Set whether the input method is visible.
    */
   fun setImeVisible(isVisible: Boolean) {
+    logToFile("setImeVisible - $isVisible")
     isImeVisible = isVisible
     behavior.isGestureInsetBottomIgnored = isVisible
   }
 
   fun setOffsetAnchor(view: View) {
+    logToFile("setOffsetAnchor called with view: ${view.javaClass.simpleName}")
+    
     val listener =
       object : ViewTreeObserver.OnGlobalLayoutListener {
         override fun onGlobalLayout() {
           view.viewTreeObserver.removeOnGlobalLayoutListener(this)
           anchorOffset = view.height + SizeUtils.dp2px(1f)
+          logToFile("setOffsetAnchor - calculated anchorOffset: $anchorOffset")
 
           behavior.peekHeight = collapsedHeight.roundToInt()
           behavior.expandedOffset = anchorOffset
@@ -258,52 +322,68 @@ constructor(
   }
 
   fun showChild(index: Int) {
+    logToFile("showChild - index: $index")
     binding.headerContainer.displayedChild = index
   }
 
   fun setActionText(text: CharSequence) {
+    logToFile("setActionText - $text")
     binding.bottomAction.actionText.text = text
   }
 
   fun setActionProgress(progress: Int) {
+    logToFile("setActionProgress - $progress%")
     binding.bottomAction.progress.setProgressCompat(progress, true)
   }
 
-  fun appendApkLog(line: LogLine) {
-    pagerAdapter.logFragment?.appendLog(line)
-  }
-
+    // 修复 appendApkLog 方法的空安全问题
+    fun appendApkLog(line: LogLine) {
+        val logContent = line.message?.take(50) ?: "null"
+        logToFile("appendApkLog - $logContent...")
+        pagerAdapter.logFragment?.appendLog(line)
+    }
+    
   fun appendBuildOut(str: String?) {
+    logToFile("appendBuildOut - ${str?.take(50)}...") // 只记录前50个字符
     pagerAdapter.buildOutputFragment?.appendOutput(str)
   }
 
   fun clearBuildOutput() {
+    logToFile("clearBuildOutput called")
     pagerAdapter.buildOutputFragment?.clearOutput()
   }
 
   fun handleDiagnosticsResultVisibility(errorVisible: Boolean) {
+    logToFile("handleDiagnosticsResultVisibility - $errorVisible")
     runOnUiThread { pagerAdapter.diagnosticsFragment?.isEmpty = errorVisible }
   }
 
   fun handleSearchResultVisibility(errorVisible: Boolean) {
+    logToFile("handleSearchResultVisibility - $errorVisible")
     runOnUiThread { pagerAdapter.searchResultFragment?.isEmpty = errorVisible }
   }
 
   fun setDiagnosticsAdapter(adapter: DiagnosticsAdapter) {
+    logToFile("setDiagnosticsAdapter - ${adapter.itemCount} items")
     runOnUiThread { pagerAdapter.diagnosticsFragment?.setAdapter(adapter) }
   }
 
   fun setSearchResultAdapter(adapter: SearchListAdapter) {
+    logToFile("setSearchResultAdapter - ${adapter.itemCount} items")
     runOnUiThread { pagerAdapter.searchResultFragment?.setAdapter(adapter) }
   }
 
   fun refreshSymbolInput(editor: CodeEditorView) {
+    logToFile("refreshSymbolInput called for editor: ${editor.file?.name}")
     binding.symbolInput.refresh(editor.editor, forFile(editor.file))
   }
 
   fun onSoftInputChanged() {
+    logToFile("onSoftInputChanged called")
+    
     if (context !is Activity) {
       log.error("Bottom sheet is not attached to an activity!")
+      logToFile("onSoftInputChanged error - not attached to an activity")
       return
     }
 
@@ -316,13 +396,16 @@ constructor(
 
     val activity = context as Activity
     if (KeyboardUtils.isSoftInputVisible(activity)) {
+      logToFile("onSoftInputChanged - keyboard visible, showing symbol input")
       binding.headerContainer.displayedChild = CHILD_SYMBOL_INPUT
     } else {
+      logToFile("onSoftInputChanged - keyboard hidden, showing header")
       binding.headerContainer.displayedChild = CHILD_HEADER
     }
   }
 
   fun setStatus(text: CharSequence, @GravityInt gravity: Int) {
+    logToFile("setStatus - text: $text, gravity: $gravity")
     runOnUiThread {
       binding.buildStatus.let {
         it.statusText.gravity = gravity
@@ -332,41 +415,178 @@ constructor(
   }
 
   private fun shareFile(file: File) {
+    logToFile("shareFile - ${file.name}")
     shareFile(context, file, "text/plain")
   }
 
-  @Suppress("DEPRECATION")
-  private fun shareText(text: String?, type: String) {
-    if (text == null || TextUtils.isEmpty(text)) {
-      flashError(context.getString(string.msg_output_text_extraction_failed))
-      return
-    }
-    val pd = android.app.ProgressDialog.show(context, null, context.getString(string.please_wait),
-      true, false)
-    executeAsyncProvideError(
-      Callable { writeTempFile(text, type) },
-      CallbackWithError<File> { result: File?, error: Throwable? ->
-        pd.dismiss()
-        if (result == null || error != null) {
-          log.warn("Unable to share output", error)
-          return@CallbackWithError
+    @Suppress("DEPRECATION")
+    private fun shareText(text: String?, type: String) {
+        logToFile("shareText - type: $type, text length: ${text?.length ?: 0}")
+        
+        if (text.isNullOrEmpty()) {
+            log.error("Text to share is null or empty")
+            logToFile("shareText error - text is null or empty")
+            flashError(context.getString(string.msg_output_text_extraction_failed))
+            return
         }
-        shareFile(result)
+        
+        val pd = android.app.ProgressDialog.show(
+            context, 
+            null, 
+            context.getString(string.please_wait),
+            true, 
+            false
+        )
+        
+        executeAsyncProvideError(
+            Callable { writeTempFile(text, type) },
+            // 修复接口实现错误，使用正确的方法名和参数类型
+            object : CallbackWithError<File?> {
+                override fun complete(result: File?, error: Throwable?) {
+                    pd.dismiss()
+                    
+                    if (result == null || error != null) {
+                        log.warn("Unable to share output", error)
+                        logToFile("shareText error - ${error?.message ?: "Failed to create temp file"}")
+                        flashError(context.getString(string.msg_failed_to_share_output))
+                        return
+                    }
+                    
+                    shareFile(result)
+                }
+            }
+        )
+    }
+    
+    // 修复 writeTempFile 方法的返回值和空安全处理
+    private fun writeTempFile(text: String, type: String): File? {
+        logToFile("writeTempFile - type: $type, text length: ${text.length}")
+        
+        return try {
+            val tempFilePath: Path = context.filesDir.toPath().resolve("${type}_share.txt")
+            val tempFile = tempFilePath.toFile()
+            
+            if (tempFile.exists()) {
+                logToFile("writeTempFile - Deleting existing temp file: ${tempFile.name}")
+                tempFile.delete()
+            }
+            
+            Files.write(
+                tempFilePath,
+                text.toByteArray(StandardCharsets.UTF_8),
+                StandardOpenOption.CREATE_NEW,
+                StandardOpenOption.WRITE
+            )
+            
+            logToFile("writeTempFile - Success: Temp file created at ${tempFile.absolutePath}")
+            tempFile
+        } catch (e: IOException) {
+            log.error("Unable to write output to temp file", e)
+            logToFile("writeTempFile error - ${e.message}\n${getStackTraceString(e)}")
+            null
+        }
+    }
+
+  // ---------------------- 日志工具方法（完整实现） ----------------------
+  /**
+   * 将日志写入本地文件（应用私有目录下的 editor_bottom_sheet_logs.txt）
+   * @param message 日志内容
+   */
+  private fun logToFile(message: String) {
+    // 避免主线程阻塞，异步写入日志（不影响UI响应）
+    Thread {
+      try {
+        // 生成带时间戳的日志行（便于追溯时间顺序）
+        val timestamp = logFormatter.format(Date())
+        val logLine = "[$timestamp] [$logTag] $message\n"
+        
+        // 确保日志文件存在（首次调用时创建）
+        if (!logFile.exists()) {
+          logFile.createNewFile()
+          logToFile("Log file initialized: ${logFile.absolutePath}") // 记录文件初始化
+        }
+        
+        // 追加日志到文件（使用APPEND模式，避免覆盖历史日志）
+        Files.write(
+          logFile.toPath(),
+          logLine.toByteArray(StandardCharsets.UTF_8),
+          StandardOpenOption.APPEND,
+          StandardOpenOption.CREATE // 防止文件被意外删除后无法写入
+        )
+        
+        // 同时输出到Logcat（开发时实时查看）
+        android.util.Log.d(logTag, message)
+      } catch (e: Exception) {
+        // 捕获日志写入异常，避免影响主逻辑
+        android.util.Log.e(logTag, "Failed to write to log file: ${e.message}", e)
       }
-    )
+    }.start()
   }
 
-  private fun writeTempFile(text: String, type: String): File {
-    // use a common name to avoid multiple files
-    val file: Path = context.filesDir.toPath().resolve("$type.txt")
-    try {
-      if (Files.exists(file)) {
-        Files.delete(file)
+  /**
+   * 将异常堆栈信息转换为字符串（便于日志记录）
+   * @param throwable 异常实例
+   * @return 包含完整堆栈的字符串
+   */
+  private fun getStackTraceString(throwable: Throwable): String {
+    val stackTraceBuilder = StringBuilder()
+    var currentThrowable: Throwable? = throwable
+    
+    // 遍历所有异常（包括cause链），避免遗漏根源异常
+    while (currentThrowable != null) {
+      stackTraceBuilder.append(currentThrowable.toString()).append("\n")
+      
+      // 追加当前异常的堆栈信息
+      for (stackElement in currentThrowable.stackTrace) {
+        stackTraceBuilder.append("    at ").append(stackElement).append("\n")
       }
-      Files.write(file, text.toByteArray(StandardCharsets.UTF_8), CREATE_NEW, WRITE)
-    } catch (e: IOException) {
-      log.error("Unable to write output to file", e)
+      
+      // 处理cause异常（若存在）
+      currentThrowable = currentThrowable.cause
+      if (currentThrowable != null) {
+        stackTraceBuilder.append("Caused by: ")
+      }
     }
-    return file.toFile()
+    
+    return stackTraceBuilder.toString()
+  }
+
+  // ---------------------- 底部弹窗状态控制方法 ----------------------
+  /**
+   * 展开底部弹窗
+   */
+  fun expand() {
+    logToFile("expand() called - Current state: ${behavior.state}")
+    if (behavior.state != BottomSheetBehavior.STATE_EXPANDED) {
+      behavior.state = BottomSheetBehavior.STATE_EXPANDED
+    }
+  }
+
+  /**
+   * 折叠底部弹窗（若支持折叠状态）
+   */
+  fun collapse() {
+    logToFile("collapse() called - Current state: ${behavior.state}")
+    if (behavior.state != BottomSheetBehavior.STATE_COLLAPSED) {
+      behavior.state = BottomSheetBehavior.STATE_COLLAPSED
+    }
+  }
+
+  /**
+   * 隐藏底部弹窗
+   */
+  fun hide() {
+    logToFile("hide() called - Current state: ${behavior.state}")
+    if (behavior.state != BottomSheetBehavior.STATE_HIDDEN) {
+      behavior.state = BottomSheetBehavior.STATE_HIDDEN
+    }
+  }
+
+  /**
+   * 检查底部弹窗是否处于展开状态
+   * @return true：展开；false：未展开（折叠/隐藏）
+   */
+  fun isExpanded(): Boolean {
+    return behavior.state == BottomSheetBehavior.STATE_EXPANDED
   }
 }
