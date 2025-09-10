@@ -47,7 +47,7 @@ jobs:
   build_apk:
     strategy:
       matrix:
-        //build_type: ['debug', 'release']
+        # build_type: ['debug', 'release']
         build_type: ['release']
     name: Build APK
     runs-on: ubuntu-latest
