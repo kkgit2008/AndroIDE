@@ -1,13 +1,13 @@
 name: Auto Release Upload
 
 on:
-  push:
-    branches: [ main, master ]
-    paths:
-      - 'RELEASE_INFO'
-      ### 只有RELEASE_INFO文件变更时触发
+#  push:
+#    branches: [ main, master ]
+#    paths:
+#      ### 只有RELEASE_INFO文件变更时触发
+#      - 'RELEASE_INFO'
   workflow_dispatch: {}
-  ### 允许手动触发
+  ### 只能手动触发
 
 env:
   BUILD_JAVA_VERSION: '17'
