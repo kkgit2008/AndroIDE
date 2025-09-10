@@ -34,7 +34,7 @@ jobs:
           submodules: 'recursive'
           fetch-depth: 0
 
-      # 提前获取short_sha，用于替换RELEASE_INFO中的占位符
+      ### 提前获取short_sha，用于替换RELEASE_INFO中的占位符
       - name: Set short SHA
         id: set_sha
         run: echo "short_sha=${GITHUB_SHA::7}" >> $GITHUB_OUTPUT
