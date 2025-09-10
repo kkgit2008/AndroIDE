@@ -4,6 +4,8 @@
   <!-- AndroidIDE -->
 
   <string name="btn_exit">Exit</string>
+  <string name="msg_failed_to_clear_output">Failed to clear output! </string>
+  <string name="msg_failed_to_share_output">Failed to share output! </string>
 
   <string name="copy" tools:override="true">Copy</string>
   <string name="terminal_more">More…</string>

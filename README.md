@@ -6,8 +6,13 @@
 * Run it on 'main' branch.
 
 * If you want, you can edit app version from 
-<a href="./composite-builds/build-logic/common/src/main/java/com/itsaky/androidide/build/config/ProjectConfig.kt">here </a>
-.
+<a href="./composite-builds/build-logic/common/src/main/java/com/itsaky/androidide/build/config/ProjectConfig.kt"> here </a>
+
+* Or, to build all architectures from 
+<a href="./composite-builds/build-logic/plugins/src/main/java/com/itsaky/androidide/plugins/conf/AndroidModuleConf.kt"> here </a>
+
+
+<br> </br>
 
 <p> </p>
 
@@ -25,9 +30,18 @@
 
 <br> </br>
 
+# Download JDK & SDK & NDK from here:
+## [JDK](https://github.com/kkgit2008/apkxxxAndroidIDE/releases/tag/JDK)
+## [SDK](https://github.com/kkgit2008/apkxxxAndroidIDE/releases/tag/SDK)
+## [NDK](https://github.com/kkgit2008/apkxxxAndroidIDE/releases/tag/NDK)
+
+<br> </br>
+
 # 🔥NOTICE
 
 * Forked from [AndroidIDEOfficial/AndroidIDE](https://github.com/AndroidIDEOfficial/AndroidIDE) 
+
+
 
 <br> </br>
 <br> </br>

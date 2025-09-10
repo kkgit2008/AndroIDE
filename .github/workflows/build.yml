@@ -5,12 +5,14 @@ on:
 #    branches: [ "dev", "main", "indexing", "release/**" ]
     paths-ignore:
       - '**.md'
+      - 'RELEASE_INFO'
       - 'fastlane/**'
       - '.github/workflows/*.yml'
   pull_request:
-    branches: [ "dev" ]
+    branches: [ "main" ]
     paths-ignore:
       - '**.md'
+      - 'RELEASE_INFO'
       - 'fastlane/**'
       - '.github/workflows/crowdin_contributors.yml'
   workflow_dispatch: { }
@@ -20,20 +22,20 @@ env:
   GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
   # Signing info
-  IDE_SIGNING_ALIAS: ${{ secrets.IDE_SIGNING_ALIAS }}
-  IDE_SIGNING_AUTH_PASS: ${{ secrets.IDE_SIGNING_AUTH_PASS }}
-  IDE_SIGNING_AUTH_USER: ${{ secrets.IDE_SIGNING_AUTH_USER }}
-  IDE_SIGNING_KEY_PASS: ${{ secrets.IDE_SIGNING_KEY_PASS }}
-  IDE_SIGNING_STORE_PASS: ${{ secrets.IDE_SIGNING_STORE_PASS }}
-  IDE_SIGNING_URL: ${{ secrets.IDE_SIGNING_URL }}
-  IDE_SIGNING_KEY_BIN: ${{ secrets.IDE_SIGNING_KEY_BIN }}
+  # IDE_SIGNING_ALIAS: ${{ secrets.IDE_SIGNING_ALIAS }}
+  # IDE_SIGNING_AUTH_PASS: ${{ secrets.IDE_SIGNING_AUTH_PASS }}
+  # IDE_SIGNING_AUTH_USER: ${{ secrets.IDE_SIGNING_AUTH_USER }}
+  # IDE_SIGNING_KEY_PASS: ${{ secrets.IDE_SIGNING_KEY_PASS }}
+  # IDE_SIGNING_STORE_PASS: ${{ secrets.IDE_SIGNING_STORE_PASS }}
+  # IDE_SIGNING_URL: ${{ secrets.IDE_SIGNING_URL }}
+  # IDE_SIGNING_KEY_BIN: ${{ secrets.IDE_SIGNING_KEY_BIN }}
 
   # Publishing credentials
-  ORG_GRADLE_PROJECT_mavenCentralUsername: ${{ secrets.MVN_USERNAME }}
-  ORG_GRADLE_PROJECT_mavenCentralPassword: ${{ secrets.MVN_PASSWORD }}
-  ORG_GRADLE_PROJECT_signingInMemoryKey: ${{ secrets.MVN_SIGNING_KEY }}
-  ORG_GRADLE_PROJECT_signingInMemoryKeyId: ${{ secrets.MVN_SIGNING_KEY_ID }}
-  ORG_GRADLE_PROJECT_signingInMemoryKeyPassword: ${{ secrets.MVN_SIGNING_KEY_PASSWORD }}
+  # ORG_GRADLE_PROJECT_mavenCentralUsername: ${{ secrets.MVN_USERNAME }}
+  # ORG_GRADLE_PROJECT_mavenCentralPassword: ${{ secrets.MVN_PASSWORD }}
+  # ORG_GRADLE_PROJECT_signingInMemoryKey: ${{ secrets.MVN_SIGNING_KEY }}
+  # ORG_GRADLE_PROJECT_signingInMemoryKeyId: ${{ secrets.MVN_SIGNING_KEY_ID }}
+  # ORG_GRADLE_PROJECT_signingInMemoryKeyPassword: ${{ secrets.MVN_SIGNING_KEY_PASSWORD }}
 
   # Build configuration
   BUILD_JAVA_VERSION: '17'
@@ -45,26 +47,36 @@ jobs:
   build_apk:
     strategy:
       matrix:
-        build_type: ['debug', 'release']
+        # build_type: ['debug', 'release']
+        build_type: ['release']
     name: Build APK
     runs-on: ubuntu-latest
     steps:
+
       - name: Cancel previous runs
         uses: styfle/cancel-workflow-action@0.12.1
         with:
           access_token: ${{ github.token }}
+
       - name: Checkout
         uses: actions/checkout@v4
         with:
           submodules: 'recursive'
           fetch-depth: 0
+      
+      - name: Set short SHA
+        id: set_sha
+        run: echo "short_sha=${GITHUB_SHA::7}" >> $GITHUB_OUTPUT
+      
       - name: Set up JDK 17
         uses: actions/setup-java@v4
         with:
           java-version: ${{ env.BUILD_JAVA_VERSION }}
           distribution: ${{ env.BUILD_JAVA_DIST }}
+
       - name: Change Gradle wrapper permissions
         run: chmod +x ./gradlew
+
       - name: Restore cache
         uses: actions/cache@v4
         with:
@@ -74,34 +86,41 @@ jobs:
           key: ${{ runner.os }}-gradle-${{ hashFiles('**/*.gradle*') }}
           restore-keys: |
             ${{ runner.os }}-gradle-
+
       - name: Assemble ${{ matrix.build_type }} APK
         run: |
           build_type=${{ matrix.build_type }}
           ./gradlew :core:app:assemble${build_type^}
+
       - name: Copy ${{ matrix.build_type }} APK
         run: |
           cp core/app/build/outputs/apk/${{ matrix.build_type }}/app-*.apk ./
+      
       - name: Upload arm64-v8a ${{ matrix.build_type }} APK
         uses: actions/upload-artifact@v4
         with:
-          name: apk-arm64-v8a-${{ matrix.build_type }}
+          name: apk-arm64-v8a-${{ matrix.build_type }}-${{ steps.set_sha.outputs.short_sha }}
           path: app-arm64-v8a-${{ matrix.build_type }}.apk
-      - name: Upload armeabi-v7a ${{ matrix.build_type }} APK
-        uses: actions/upload-artifact@v4
-        with:
-          name: apk-armeabi-v7a-${{ matrix.build_type }}
-          path: app-armeabi-v7a-${{ matrix.build_type }}.apk
-      - name: Upload x86_64 ${{ matrix.build_type }} APK
-        uses: actions/upload-artifact@v4
-        with:
-          name: apk-x86_64-${{ matrix.build_type }}
-          path: app-x86_64-${{ matrix.build_type }}.apk
+      
+#      - name: Upload armeabi-v7a ${{ matrix.build_type }} APK
+#        uses: actions/upload-artifact@v4
+#        with:
+#          name: apk-armeabi-v7a-${{ matrix.build_type }}-${{ steps.set_sha.outputs.short_sha }}
+#          path: app-armeabi-v7a-${{ matrix.build_type }}.apk
+#      
+#      - name: Upload x86_64 ${{ matrix.build_type }} APK
+#        uses: actions/upload-artifact@v4
+#        with:
+#          name: apk-x86_64-${{ matrix.build_type }}-${{ steps.set_sha.outputs.short_sha }}
+#          path: app-x86_64-${{ matrix.build_type }}.apk
+      
       - name: Upload ${{ matrix.build_type }} mappings
         if: ${{ always() && matrix.build_type == 'release' }}
         uses: actions/upload-artifact@v4
         with:
-          name: release-mappings
+          name: release-mappings-${{ steps.set_sha.outputs.short_sha }}
           path: '**/build/outputs/mapping'
+
 
   run_tooling_api_tests:
     name: Build and test Tooling API
