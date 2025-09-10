@@ -1,0 +1,209 @@
+name: Auto Release Upload
+
+on:
+  push:
+    branches: [ main, master ]
+    paths:
+      - 'RELEASE_INFO'
+      ### 只有RELEASE_INFO文件变更时触发
+  workflow_dispatch: {}
+  ### 允许手动触发
+
+env:
+  BUILD_JAVA_VERSION: '17'
+  BUILD_JAVA_DIST: 'adopt'
+  
+  APK_OUTPUT_PATH: ./core/app/build/outputs/apk/release/
+  APK_OUTPUT_FILE1: app-arm64-v8a-release.apk
+  ARTIFACT_DIR: ./release-artifacts
+  INFO_FILE: ./RELEASE_INFO
+
+jobs:
+  validate-and-release:
+    name: Validate and create release
+    runs-on: ubuntu-latest
+    steps:
+      - name: Cancel previous runs
+        uses: styfle/cancel-workflow-action@0.12.1
+        with:
+          access_token: ${{ github.token }}
+
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          submodules: 'recursive'
+          fetch-depth: 0
+
+      - name: Read release information
+        id: release_info
+        run: |
+          ### 验证RELEASE_INFO文件存在
+          if [ ! -f "${{ env.INFO_FILE }}" ]; then
+            echo "RELEASE_INFO file not found!"
+            exit 1
+          fi
+
+          ### 提取版本号
+          TAG_NAME=$(grep '^TAG_NAME=' ${{ env.INFO_FILE }} | cut -d'=' -f2- | tr -d '[:space:]')
+          if [ -z "$TAG_NAME" ]; then
+            echo "TAG_NAME not specified in RELEASE_INFO"
+            exit 1
+          fi
+
+          ### 提取标题
+          TITLE=$(grep '^TITLE=' ${{ env.INFO_FILE }} | cut -d'=' -f2-)
+          if [ -z "$TITLE" ]; then
+            echo "TITLE not specified in RELEASE_INFO"
+            exit 1
+          fi
+
+          ### 提取目标分支
+          BRANCH=$(grep '^BRANCH=' ${{ env.INFO_FILE }} | cut -d'=' -f2- | tr -d '[:space:]')
+          if [ -z "$BRANCH" ]; then
+            echo "BRANCH not specified in RELEASE_INFO"
+            exit 1
+          fi
+
+          ### 提取预发布标记（默认false）
+          PRERELEASE=$(grep '^PRERELEASE=' ${{ env.INFO_FILE }} | cut -d'=' -f2- | tr -d '[:space:]')
+          if [ -z "$PRERELEASE" ]; then
+            PRERELEASE="false"
+          fi
+
+          ### 提取版本说明（从NOTES=开始到文件结束）
+          NOTES=$(awk 'BEGIN {found=0} /^NOTES=/{found=1; sub(/^NOTES=/, ""); print; next} found' ${{ env.INFO_FILE }})
+          if [ -z "$NOTES" ]; then
+            echo "NOTES not specified in RELEASE_INFO"
+            exit 1
+          fi
+
+          ### 输出到GitHub环境变量
+          echo "tag_name=$TAG_NAME" >> $GITHUB_OUTPUT
+          echo "title=$TITLE" >> $GITHUB_OUTPUT
+          echo "branch=$BRANCH" >> $GITHUB_OUTPUT
+          echo "prerelease=$PRERELEASE" >> $GITHUB_OUTPUT
+          echo "notes<<EOF" >> $GITHUB_OUTPUT
+          echo "$NOTES" >> $GITHUB_OUTPUT
+          echo "EOF" >> $GITHUB_OUTPUT
+
+          ### 显示读取的信息
+          echo "Tag_name: $TAG_NAME"
+          echo "Title: $TITLE"
+          echo "Target branch: $BRANCH"
+          echo "Pre-release: $PRERELEASE"
+          echo "Notes length: $(echo -n "$NOTES" | wc -c) characters"
+
+      - name: Check current branch matches target branch
+        run: |
+          CURRENT_BRANCH=$(git rev-parse --abbrev-ref HEAD)
+          echo "Current branch: $CURRENT_BRANCH"
+          echo "Target branch: ${{ steps.release_info.outputs.branch }}"
+          
+          if [ "$CURRENT_BRANCH" != "${{ steps.release_info.outputs.branch }}" ]; then
+            echo "This release is configured for branch '${{ steps.release_info.outputs.branch }}' but current branch is '$CURRENT_BRANCH'"
+            exit 1
+          fi
+
+      - name: Check if tag exists
+        id: check_tag
+        run: |
+          TAG="v${{ steps.release_info.outputs.tag_name }}"
+          if git rev-parse "$TAG" >/dev/null 2>&1; then
+            echo "tag_exists=true" >> $GITHUB_OUTPUT
+            echo "Tag $TAG already exists"
+          else
+            echo "tag_exists=false" >> $GITHUB_OUTPUT
+            echo "Tag $TAG will be created"
+          fi
+
+      ### 以下步骤添加了条件判断，只有当tag不存在时才执行
+      - name: Set short SHA
+        id: set_sha
+        if: ${{ steps.check_tag.outputs.tag_exists == 'false' }}
+        run: echo "short_sha=${GITHUB_SHA::7}" >> $GITHUB_OUTPUT
+      
+      - name: Set up JDK 17
+        if: ${{ steps.check_tag.outputs.tag_exists == 'false' }}
+        uses: actions/setup-java@v4
+        with:
+          java-version: ${{ env.BUILD_JAVA_VERSION }}
+          distribution: ${{ env.BUILD_JAVA_DIST }}
+          cache: 'gradle'
+
+      - name: Make gradlew executable
+        if: ${{ steps.check_tag.outputs.tag_exists == 'false' }}
+        run: chmod +x ./gradlew
+
+      - name: Restore Gradle cache
+        if: ${{ steps.check_tag.outputs.tag_exists == 'false' }}
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.gradle/caches
+            ~/.gradle/wrapper
+          key: ${{ runner.os }}-gradle-${{ hashFiles('**/*.gradle*', '**/gradle-wrapper.properties') }}
+          restore-keys: |
+            ${{ runner.os }}-gradle-
+
+      - name: Run code quality checks
+        if: ${{ steps.check_tag.outputs.tag_exists == 'false' }}
+        run: ./gradlew lintRelease
+        continue-on-error: false
+
+      - name: Run tests
+        if: ${{ steps.check_tag.outputs.tag_exists == 'false' }}
+        run: ./gradlew testReleaseUnitTest
+        continue-on-error: false
+
+      - name: Build Release APK
+        if: ${{ steps.check_tag.outputs.tag_exists == 'false' }}
+        run: ./gradlew :core:app:assembleRelease
+        continue-on-error: false
+
+      - name: Show apk paths
+        run: |
+            echo ">>APK:"
+            ls -la ${{ env.APK_OUTPUT_PATH }}
+
+      - name: Verify APK exists
+        if: ${{ steps.check_tag.outputs.tag_exists == 'false' }}
+        run: |
+          if [ ! -f "${{ env.APK_OUTPUT_PATH }}/${{ env.APK_OUTPUT_FILE1 }}" ]; then
+            echo ">>APK file not found at ${{ env.APK_OUTPUT_PATH }}/${{ env.APK_OUTPUT_FILE1 }}"
+            exit 1
+          fi
+          echo ">>APK size: $(du -h ${{ env.APK_OUTPUT_PATH }}/${{ env.APK_OUTPUT_FILE1 }})"
+
+      - name: Prepare release artifacts
+        if: ${{ steps.check_tag.outputs.tag_exists == 'false' }}
+        run: |
+          mkdir -p ${{ env.ARTIFACT_DIR }}
+          cp ${{ env.APK_OUTPUT_PATH }}/${{ env.APK_OUTPUT_FILE1 }} ${{ env.ARTIFACT_DIR }}/${{ steps.set_sha.outputs.short_sha }}-${{ env.APK_OUTPUT_FILE1 }}.apk
+          sha256sum ${{ env.ARTIFACT_DIR }}/${{ steps.set_sha.outputs.short_sha }}-${{ env.APK_OUTPUT_FILE1 }}.apk > ${{ env.ARTIFACT_DIR }}/${{ steps.set_sha.outputs.short_sha }}-${{ env.APK_OUTPUT_FILE1 }}.sha256
+          ls -la ${{ env.ARTIFACT_DIR }}
+
+      - name: Create and push tag
+        if: ${{ steps.check_tag.outputs.tag_exists == 'false' }}
+        run: |
+          TAG="v${{ steps.release_info.outputs.tag_name }}"
+          git config --global user.email "actions@github.com"
+          git config --global user.name "GitHub Actions"
+          git tag -a $TAG -m "${{ steps.release_info.outputs.title }}"
+          git push origin $TAG
+          echo "Created and pushed tag: $TAG"
+
+      - name: Create GitHub Release
+        if: ${{ steps.check_tag.outputs.tag_exists == 'false' }}
+        uses: softprops/action-gh-release@v1
+        with:
+          tag_name: "v${{ steps.release_info.outputs.tag_name }}"
+          name: ${{ steps.release_info.outputs.title }}
+          body: ${{ steps.release_info.outputs.notes }}
+          files: ${{ env.ARTIFACT_DIR }}/*
+          ### 直接公开，而不是保存为草稿
+          draft: false
+          prerelease: ${{ steps.release_info.outputs.prerelease }}
+          ### 只有非预发布版本才设置为latest
+          make_latest: ${{ steps.release_info.outputs.prerelease == 'false' }}
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
