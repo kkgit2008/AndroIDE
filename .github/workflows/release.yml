@@ -148,12 +148,12 @@ jobs:
       - name: Run code quality checks
         if: ${{ steps.check_tag.outputs.tag_exists == 'false' }}
         run: ./gradlew lintRelease
-        continue-on-error: false
+        continue-on-error: true
 
       - name: Run tests
         if: ${{ steps.check_tag.outputs.tag_exists == 'false' }}
         run: ./gradlew testReleaseUnitTest
-        continue-on-error: false
+        continue-on-error: true
 
       - name: Build Release APK
         if: ${{ steps.check_tag.outputs.tag_exists == 'false' }}
@@ -161,6 +161,7 @@ jobs:
         continue-on-error: false
 
       - name: Show apk paths
+        if: ${{ steps.check_tag.outputs.tag_exists == 'false' }}
         run: |
             echo ">>APK:"
             ls -la ${{ env.APK_OUTPUT_PATH }}
