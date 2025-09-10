@@ -12,7 +12,7 @@ on:
 env:
   BUILD_JAVA_VERSION: '17'
   BUILD_JAVA_DIST: 'adopt'
-  
+
   APK_OUTPUT_PATH: ./core/app/build/outputs/apk/release
   APK_OUTPUT_FILE1: app-arm64-v8a-release.apk
   ARTIFACT_DIR: ./release-artifacts
@@ -130,6 +130,20 @@ jobs:
             echo "Tag $TAG will be created"
           fi
 
+      ### 先创建并推送标签（仅当标签不存在时执行）
+      - name: Create and push tag
+        if: ${{ steps.check_tag.outputs.tag_exists == 'false' }}
+        run: |
+          TAG="v${{ steps.release_info.outputs.tag_name }}"
+          git config --global user.email "actions@github.com"
+          git config --global user.name "GitHub Actions"
+          git tag -a $TAG -m "${{ steps.release_info.outputs.title }}"
+          git push origin $TAG
+          echo "Created and pushed tag: $TAG"
+          
+          ### 刷新本地标签信息，确保后续步骤能看到新创建的标签
+          git fetch --tags
+
       ### 以下步骤添加了条件判断，只有当tag不存在时才执行
       - name: Set up JDK 17
         if: ${{ steps.check_tag.outputs.tag_exists == 'false' }}
@@ -192,16 +206,6 @@ jobs:
           sha256sum ${{ env.ARTIFACT_DIR }}/${{ steps.set_sha.outputs.short_sha }}-${{ env.APK_OUTPUT_FILE1 }} > ${{ env.ARTIFACT_DIR }}/${{ steps.set_sha.outputs.short_sha }}-${{ env.APK_OUTPUT_FILE1 }}.sha256
           ls -la ${{ env.ARTIFACT_DIR }}
 
-      - name: Create and push tag
-        if: ${{ steps.check_tag.outputs.tag_exists == 'false' }}
-        run: |
-          TAG="v${{ steps.release_info.outputs.tag_name }}"
-          git config --global user.email "actions@github.com"
-          git config --global user.name "GitHub Actions"
-          git tag -a $TAG -m "${{ steps.release_info.outputs.title }}"
-          git push origin $TAG
-          echo "Created and pushed tag: $TAG"
-
       - name: Create GitHub Release
         if: ${{ steps.check_tag.outputs.tag_exists == 'false' }}
         uses: softprops/action-gh-release@v1
@@ -217,4 +221,3 @@ jobs:
           make_latest: ${{ steps.release_info.outputs.prerelease == 'false' }}
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-    
