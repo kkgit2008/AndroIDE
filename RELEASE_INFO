@@ -2,7 +2,7 @@
 TAG_NAME=2.7.1-beta8
 
 # 发布标题（必填）
-TITLE=2.7.1-beta6-shortSHA
+TITLE=2.7.1-beta8 shortSHA
 
 # 目标分支（必填）
 BRANCH=main
