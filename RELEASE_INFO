@@ -12,7 +12,8 @@ PRERELEASE=true
 
 # 发布说明（必填，从NOTES=开始到文件结束，支持markdown格式）
 NOTES=
-# 本次更新包含以下内容：
-- 修复了导致崩溃的问题(较常见) [#13](https://github.com/kkgit2008/apkxxxAndroidIDE/discussions/13)
+# What's Changed：
+- This update fixed the issue that caused crashes (with a relatively high occurrence probability) [#13](https://github.com/kkgit2008/apkxxxAndroidIDE/discussions/13)
 
-# FullChangelog: https://github.com/kkgit2008/apkxxxAndroidIDE/compare/2.7.1-beta6...2.7.1-beta6-8101b5a
+# FullChangelog: 
+* https://github.com/kkgit2008/apkxxxAndroidIDE/compare/2.7.1-beta6...2.7.1-beta6-8101b5a
