@@ -1,0 +1,18 @@
+# 版本号（必填）
+TAG_NAME=2.7.1-beta6-shortSHA
+
+# 发布标题（必填）
+TITLE=2.7.1-beta6-shortSHA pre-release
+
+# 目标分支（必填）
+BRANCH=main
+
+# 是否为预发布版本（可选，默认false）
+PRERELEASE=true
+
+# 发布说明（必填，从NOTES=开始到文件结束，支持markdown格式）
+NOTES=
+# 本次更新包含以下内容：
+- 修复了导致崩溃的问题(较常见) [#13](https://github.com/kkgit2008/apkxxxAndroidIDE/discussions/13)
+
+# FullChangelog: https://github.com/kkgit2008/apkxxxAndroidIDE/compare/2.7.1-beta6...2.7.1-beta6-shortSHA
