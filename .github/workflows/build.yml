@@ -1,20 +1,6 @@
 name: Build and test
 
 on:
-  push:
-#    branches: [ "dev", "main", "indexing", "release/**" ]
-    paths-ignore:
-      - '**.md'
-      - 'RELEASE_INFO'
-      - 'fastlane/**'
-      - '.github/workflows/*.yml'
-  pull_request:
-    branches: [ "main" ]
-    paths-ignore:
-      - '**.md'
-      - 'RELEASE_INFO'
-      - 'fastlane/**'
-      - '.github/workflows/crowdin_contributors.yml'
   workflow_dispatch: { }
 
 env:
