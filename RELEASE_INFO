@@ -1,5 +1,5 @@
 # 版本号（必填）
-TAG_NAME=2.7.1-beta6-shortSHA
+TAG_NAME=2.7.1-beta7
 
 # 发布标题（必填）
 TITLE=2.7.1-beta6-shortSHA
