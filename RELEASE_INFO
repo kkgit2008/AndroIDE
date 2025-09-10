@@ -18,4 +18,4 @@ NOTES=
 ## What's Changed：
 - This update fixed the issue that caused crashes (with a relatively high occurrence probability) [#13](https://github.com/kkgit2008/apkxxxAndroidIDE/discussions/13)
 ## FullChangelog: 
-* https://github.com/kkgit2008/apkxxxAndroidIDE/compare/release_2.7.1-beta6...release_2.7.1-beta6-shortSHA
+* https://github.com/kkgit2008/apkxxxAndroidIDE/compare/2.7.1-beta6...2.7.1-beta8
