@@ -34,7 +34,12 @@ jobs:
           submodules: 'recursive'
           fetch-depth: 0
 
-      - name: Read release information
+      # 提前获取short_sha，用于替换RELEASE_INFO中的占位符
+      - name: Set short SHA
+        id: set_sha
+        run: echo "short_sha=${GITHUB_SHA::7}" >> $GITHUB_OUTPUT
+
+      - name: Read and process release information
         id: release_info
         run: |
           ### 验证RELEASE_INFO文件存在
@@ -43,35 +48,41 @@ jobs:
             exit 1
           fi
 
+          ### 临时文件用于存储处理后的内容
+          TEMP_FILE=$(mktemp)
+          
+          ### 替换文件中所有的shortSHA为实际的short_sha
+          sed "s/shortSHA/${{ steps.set_sha.outputs.short_sha }}/g" ${{ env.INFO_FILE }} > $TEMP_FILE
+
           ### 提取版本号
-          TAG_NAME=$(grep '^TAG_NAME=' ${{ env.INFO_FILE }} | cut -d'=' -f2- | tr -d '[:space:]')
+          TAG_NAME=$(grep '^TAG_NAME=' $TEMP_FILE | cut -d'=' -f2- | tr -d '[:space:]')
           if [ -z "$TAG_NAME" ]; then
             echo "TAG_NAME not specified in RELEASE_INFO"
             exit 1
           fi
 
           ### 提取标题
-          TITLE=$(grep '^TITLE=' ${{ env.INFO_FILE }} | cut -d'=' -f2-)
+          TITLE=$(grep '^TITLE=' $TEMP_FILE | cut -d'=' -f2-)
           if [ -z "$TITLE" ]; then
             echo "TITLE not specified in RELEASE_INFO"
             exit 1
           fi
 
           ### 提取目标分支
-          BRANCH=$(grep '^BRANCH=' ${{ env.INFO_FILE }} | cut -d'=' -f2- | tr -d '[:space:]')
+          BRANCH=$(grep '^BRANCH=' $TEMP_FILE | cut -d'=' -f2- | tr -d '[:space:]')
           if [ -z "$BRANCH" ]; then
             echo "BRANCH not specified in RELEASE_INFO"
             exit 1
           fi
 
           ### 提取预发布标记（默认false）
-          PRERELEASE=$(grep '^PRERELEASE=' ${{ env.INFO_FILE }} | cut -d'=' -f2- | tr -d '[:space:]')
+          PRERELEASE=$(grep '^PRERELEASE=' $TEMP_FILE | cut -d'=' -f2- | tr -d '[:space:]')
           if [ -z "$PRERELEASE" ]; then
             PRERELEASE="false"
           fi
 
           ### 提取版本说明（从NOTES=开始到文件结束）
-          NOTES=$(awk 'BEGIN {found=0} /^NOTES=/{found=1; sub(/^NOTES=/, ""); print; next} found' ${{ env.INFO_FILE }})
+          NOTES=$(awk 'BEGIN {found=0} /^NOTES=/{found=1; sub(/^NOTES=/, ""); print; next} found' $TEMP_FILE)
           if [ -z "$NOTES" ]; then
             echo "NOTES not specified in RELEASE_INFO"
             exit 1
@@ -92,6 +103,9 @@ jobs:
           echo "Target branch: $BRANCH"
           echo "Pre-release: $PRERELEASE"
           echo "Notes length: $(echo -n "$NOTES" | wc -c) characters"
+          
+          ### 清理临时文件
+          rm -f $TEMP_FILE
 
       - name: Check current branch matches target branch
         run: |
@@ -117,11 +131,6 @@ jobs:
           fi
 
       ### 以下步骤添加了条件判断，只有当tag不存在时才执行
-      - name: Set short SHA
-        id: set_sha
-        if: ${{ steps.check_tag.outputs.tag_exists == 'false' }}
-        run: echo "short_sha=${GITHUB_SHA::7}" >> $GITHUB_OUTPUT
-      
       - name: Set up JDK 17
         if: ${{ steps.check_tag.outputs.tag_exists == 'false' }}
         uses: actions/setup-java@v4
@@ -208,3 +217,4 @@ jobs:
           make_latest: ${{ steps.release_info.outputs.prerelease == 'false' }}
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+    
