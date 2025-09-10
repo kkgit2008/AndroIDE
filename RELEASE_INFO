@@ -1,5 +1,5 @@
 # 版本号（必填）
-TAG_NAME=2.7.1-beta7
+TAG_NAME=2.7.1-beta8
 
 # 发布标题（必填）
 TITLE=2.7.1-beta6-shortSHA
@@ -12,7 +12,10 @@ PRERELEASE=true
 
 # 发布说明（必填，从NOTES=开始到文件结束，支持markdown格式）
 NOTES=
-# What's Changed：
+# This release is experimental and will be deleted soon, DO NOT DOWNLOAD!!! 
+
+<br></br><br></br><br></br>
+## What's Changed：
 - This update fixed the issue that caused crashes (with a relatively high occurrence probability) [#13](https://github.com/kkgit2008/apkxxxAndroidIDE/discussions/13)
-# FullChangelog: 
+## FullChangelog: 
 * https://github.com/kkgit2008/apkxxxAndroidIDE/compare/release_2.7.1-beta6...release_2.7.1-beta6-shortSHA
