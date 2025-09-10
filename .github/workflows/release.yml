@@ -129,8 +129,6 @@ jobs:
             echo "tag_exists=false" >> $GITHUB_OUTPUT
             echo "Tag $TAG will be created"
           fi
-          echo ">>>end build<<<"
-          exit 1
 
       ### 以下步骤添加了条件判断，只有当tag不存在时才执行
       - name: Set up JDK 17
