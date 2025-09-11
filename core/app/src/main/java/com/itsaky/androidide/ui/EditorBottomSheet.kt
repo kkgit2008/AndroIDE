@@ -385,10 +385,10 @@ constructor(
     runOnUiThread { pagerAdapter.searchResultFragment?.setAdapter(adapter) }
   }
 
-//   fun refreshSymbolInput(editor: CodeEditorView) {
-//     logToFile("refreshSymbolInput called for editor: ${editor.file?.name}")
-//     binding.symbolInput.refresh(editor.editor, forFile(editor.file))
-//   }
+  fun refreshSymbolInput(editor: CodeEditorView) {
+    logToFile("refreshSymbolInput called for editor: ${editor.file?.name}")
+    binding.symbolInput.refresh(editor.editor, forFile(editor.file))
+  }
 
   fun onSoftInputChanged() {
     logToFile("onSoftInputChanged called")
