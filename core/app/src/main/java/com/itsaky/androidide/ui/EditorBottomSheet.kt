@@ -66,7 +66,10 @@ import java.nio.charset.StandardCharsets
 import java.nio.file.Files
 import java.nio.file.Path
 import java.nio.file.StandardOpenOption
-import java.text.SimpleDateFormat
+//import java.text.SimpleDateFormat
+import java.time.LocalDateTime
+import java.time.format.DateTimeFormatter
+
 import java.util.*
 import java.util.concurrent.Callable
 import kotlin.math.roundToInt
@@ -86,10 +89,18 @@ constructor(
 
   // 新增：日志相关变量
   private val logTag = "EditorBottomSheet"
-  private val logFormatter = SimpleDateFormat("yyyy-MM-dd HH:mm:ss.SSS", Locale.US)
+  private val logFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss.SSS", Locale.US)
   private val logFile by lazy {
     File(context.filesDir, "editor_bottom_sheet_logs.txt")
   }
+
+  // 新增：日志文件控制常量（文件超过10MB时保留最近1000行）
+  private const val MAX_LOG_FILE_SIZE = 10 * 1024 * 1024 // 10MB（字节）
+  private const val KEEP_LAST_LOG_LINES = 1000          // 超过大小后保留的最近行数
+  // 新增：清理流程标记（@Volatile保证多线程可见性，防止递归调用）
+  @Volatile
+  @JvmField
+  private var isCleaning = false
 
   private val collapsedHeight: Float by lazy {
     val localContext = getContext() ?: return@lazy 0f
@@ -490,6 +501,7 @@ constructor(
   // ---------------------- 日志工具方法（完整实现） ----------------------
   /**
    * 将日志写入本地文件（应用私有目录下的 editor_bottom_sheet_logs.txt）
+   * 新增逻辑：文件超过10MB时，保留最近1000行日志，且清理操作日志同步写入
    * @param message 日志内容
    */
   private fun logToFile(message: String) {
@@ -497,30 +509,105 @@ constructor(
     Thread {
       try {
         // 生成带时间戳的日志行（便于追溯时间顺序）
-        val timestamp = logFormatter.format(Date())
-        val logLine = "[$timestamp] [$logTag] $message\n"
-        
-        // 确保日志文件存在（首次调用时创建）
-        if (!logFile.exists()) {
-          logFile.createNewFile()
-          logToFile("Log file initialized: ${logFile.absolutePath}") // 记录文件初始化
+        // 新增：日志文件大小检测与清理（仅当未处于清理流程时执行，防止递归）
+        if (!isCleaning && logFile.exists()) {
+          if (logFile.length() > MAX_LOG_FILE_SIZE) {
+            // 标记进入清理流程，防止后续日志触发递归
+            isCleaning = true
+            val cleanLogPrefix = "Log file cleanup: "
+            try {
+              // 1. 记录清理开始日志（先写入，避免被后续清理删除）
+              val startCleanMsg = "$cleanLogPrefix started, current size: ${logFile.length() / 1024}KB"
+              writeLogLineToFile(startCleanMsg)
+              
+              // 2. 读取所有日志行（UTF-8编码，避免乱码）
+              val allLines = Files.readAllLines(
+                logFile.toPath(),
+                StandardCharsets.UTF_8
+              )
+              
+              // 3. 筛选保留行（不足1000行则保留全部）
+              val keepLines = if (allLines.size > KEEP_LAST_LOG_LINES) {
+                allLines.subList(allLines.size - KEEP_LAST_LOG_LINES, allLines.size)
+              } else {
+                allLines
+              }
+              
+              // 4. 覆盖写入保留的日志（清空原文件后写入）
+              Files.write(
+                logFile.toPath(),
+                keepLines,
+                StandardCharsets.UTF_8,
+                StandardOpenOption.WRITE,
+                StandardOpenOption.TRUNCATE_EXISTING
+              )
+              
+              // 5. 记录清理完成日志（写入本地文件）
+              val endCleanMsg = "$cleanLogPrefix completed, kept ${keepLines.size} lines, new size: ${logFile.length() / 1024}KB"
+              writeLogLineToFile(endCleanMsg)
+              // 同步输出到Logcat，便于开发调试
+              android.util.Log.d(logTag, endCleanMsg)
+            } finally {
+              // 无论清理成功/失败，都标记清理流程结束（释放标记）
+              isCleaning = false
+            }
+          }
         }
         
-        // 追加日志到文件（使用APPEND模式，避免覆盖历史日志）
-        Files.write(
-          logFile.toPath(),
-          logLine.toByteArray(StandardCharsets.UTF_8),
-          StandardOpenOption.APPEND,
-          StandardOpenOption.CREATE // 防止文件被意外删除后无法写入
-        )
-        
-        // 同时输出到Logcat（开发时实时查看）
-        android.util.Log.d(logTag, message)
+        // 原有日志写入逻辑（仅当未处于清理流程时执行，避免日志被截断）
+        if (!isCleaning) {
+          writeLogLineToFile(message)
+          // 同时输出到Logcat（开发时实时查看）
+          android.util.Log.d(logTag, message)
+        }
       } catch (e: Exception) {
-        // 捕获日志写入异常，避免影响主逻辑
-        android.util.Log.e(logTag, "Failed to write to log file: ${e.message}", e)
+        // 捕获日志写入/清理异常，避免影响主逻辑
+        val errorMsg = "Failed to process log (write/clean): ${e.message}"
+        android.util.Log.e(logTag, errorMsg, e)
+        // 异常日志也写入本地（即使清理失败，也能记录问题）
+        if (!isCleaning) {
+          writeLogLineToFile(errorMsg)
+        }
       }
     }.start()
+  }
+
+  /**
+   * 底层日志写入方法（无清理逻辑，仅负责格式处理与文件写入）
+   * 作用：避免logToFile的清理逻辑递归调用，统一日志格式
+   * @param content 原始日志内容
+   */
+  private fun writeLogLineToFile(content: String) {
+    try {
+      // 生成带时间戳的日志行
+        val timestamp = logFormatter.format(LocalDateTime.now())
+        val logLine = "[$timestamp] [$logTag] $content\n"
+      
+      // 确保日志文件存在（首次调用时创建）
+      if (!logFile.exists()) {
+        logFile.createNewFile()
+        // 记录文件初始化日志（仅首次创建时写入）
+        val initLine = "[$timestamp] [$logTag] Log file initialized: ${logFile.absolutePath}\n"
+        Files.write(
+          logFile.toPath(),
+          initLine.toByteArray(StandardCharsets.UTF_8),
+          StandardOpenOption.WRITE,
+          StandardOpenOption.CREATE
+        )
+        return
+      }
+      
+      // 追加日志到文件（使用APPEND模式，避免覆盖历史日志）
+      Files.write(
+        logFile.toPath(),
+        logLine.toByteArray(StandardCharsets.UTF_8),
+        StandardOpenOption.APPEND,
+        StandardOpenOption.CREATE // 防止文件被意外删除后无法写入
+      )
+    } catch (e: Exception) {
+      // 底层写入异常仅输出到Logcat，不递归调用logToFile
+      android.util.Log.e(logTag, "Failed to write log line to file: ${e.message}", e)
+    }
   }
 
   /**
