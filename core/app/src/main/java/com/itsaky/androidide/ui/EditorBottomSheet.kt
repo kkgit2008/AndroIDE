@@ -95,12 +95,12 @@ constructor(
   }
 
   // 新增：日志文件控制常量（文件超过10MB时保留最近1000行）
-  private const val MAX_LOG_FILE_SIZE = 10 * 1024 * 1024 // 10MB（字节）
-  private const val KEEP_LAST_LOG_LINES = 1000          // 超过大小后保留的最近行数
+  private val MAX_LOG_FILE_SIZE = 10 * 1024 * 1024 // 10MB（字节）
+  private val KEEP_LAST_LOG_LINES = 1000          // 超过大小后保留的最近行数
   // 新增：清理流程标记（@Volatile保证多线程可见性，防止递归调用）
   @Volatile
-  @JvmField
-  private var isCleaning = false
+  private var isCleaning = false //是否正在清理日志
+  private var logLineNumber = AtomicInteger(1) // 原子类确保多线程安全
 
   private val collapsedHeight: Float by lazy {
     val localContext = getContext() ?: return@lazy 0f
@@ -526,7 +526,7 @@ constructor(
                 StandardCharsets.UTF_8
               )
               
-              // 3. 筛选保留行（不足1000行则保留全部）
+              // 3. 筛选保留行（不足N行则保留全部）
               val keepLines = if (allLines.size > KEEP_LAST_LOG_LINES) {
                 allLines.subList(allLines.size - KEEP_LAST_LOG_LINES, allLines.size)
               } else {
@@ -547,6 +547,20 @@ constructor(
               writeLogLineToFile(endCleanMsg)
               // 同步输出到Logcat，便于开发调试
               android.util.Log.d(logTag, endCleanMsg)
+
+                // 给保留的日志行重新编号
+                val renumberedLines = keepLines.mapIndexed { index, line ->
+                    line.replace(Regex("^\\[\\d+] "), "[${index + 1}] ")
+                }
+                Files.write(
+                    logFile.toPath(),
+                    renumberedLines,
+                    StandardCharsets.UTF_8,
+                    StandardOpenOption.WRITE,
+                    StandardOpenOption.TRUNCATE_EXISTING
+                )
+                logLineNumber.set(renumberedLines.size + 1) // 设置下一行的行号
+
             } finally {
               // 无论清理成功/失败，都标记清理流程结束（释放标记）
               isCleaning = false
@@ -579,15 +593,18 @@ constructor(
    */
   private fun writeLogLineToFile(content: String) {
     try {
-      // 生成带时间戳的日志行
+      // 生成带行号及时间戳的日志行
         val timestamp = logFormatter.format(LocalDateTime.now())
-        val logLine = "[$timestamp] [$logTag] $content\n"
-      
+        val currentLine = logLineNumber.getAndIncrement()
+        val logLine = "[$currentLine] [$timestamp] [$logTag] $content\n"
+
       // 确保日志文件存在（首次调用时创建）
       if (!logFile.exists()) {
         logFile.createNewFile()
+        logLineNumber.set(1) // 重置行号为1
         // 记录文件初始化日志（仅首次创建时写入）
-        val initLine = "[$timestamp] [$logTag] Log file initialized: ${logFile.absolutePath}\n"
+        val initLine = "[$logLineNumber] [$timestamp] [$logTag] Log file initialized: ${logFile.absolutePath}\n"
+        logLineNumber.incrementAndGet() // 增加行号
         Files.write(
           logFile.toPath(),
           initLine.toByteArray(StandardCharsets.UTF_8),
