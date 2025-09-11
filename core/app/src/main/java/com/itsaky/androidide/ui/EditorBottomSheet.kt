@@ -69,6 +69,7 @@ import java.nio.file.StandardOpenOption
 //import java.text.SimpleDateFormat
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
+import java.util.concurrent.atomic.AtomicInteger
 
 import java.util.*
 import java.util.concurrent.Callable
@@ -384,10 +385,10 @@ constructor(
     runOnUiThread { pagerAdapter.searchResultFragment?.setAdapter(adapter) }
   }
 
-  fun refreshSymbolInput(editor: CodeEditorView) {
-    logToFile("refreshSymbolInput called for editor: ${editor.file?.name}")
-    binding.symbolInput.refresh(editor.editor, forFile(editor.file))
-  }
+//   fun refreshSymbolInput(editor: CodeEditorView) {
+//     logToFile("refreshSymbolInput called for editor: ${editor.file?.name}")
+//     binding.symbolInput.refresh(editor.editor, forFile(editor.file))
+//   }
 
   fun onSoftInputChanged() {
     logToFile("onSoftInputChanged called")
@@ -469,34 +470,35 @@ constructor(
         )
     }
     
-    // 修复 writeTempFile 方法的返回值和空安全处理
-    private fun writeTempFile(text: String, type: String): File? {
-        logToFile("writeTempFile - type: $type, text length: ${text.length}")
-        
-        return try {
-            val tempFilePath: Path = context.filesDir.toPath().resolve("${type}_share.txt")
-            val tempFile = tempFilePath.toFile()
-            
-            if (tempFile.exists()) {
-                logToFile("writeTempFile - Deleting existing temp file: ${tempFile.name}")
-                tempFile.delete()
-            }
-            
-            Files.write(
-                tempFilePath,
-                text.toByteArray(StandardCharsets.UTF_8),
-                StandardOpenOption.CREATE_NEW,
-                StandardOpenOption.WRITE
-            )
-            
-            logToFile("writeTempFile - Success: Temp file created at ${tempFile.absolutePath}")
-            tempFile
-        } catch (e: IOException) {
-            log.error("Unable to write output to temp file", e)
-            logToFile("writeTempFile error - ${e.message}\n${getStackTraceString(e)}")
-            null
-        }
+  // 修复 writeTempFile 方法的返回值和空安全处理
+  private fun writeTempFile(text: String, type: String): File? {
+    logToFile("writeTempFile - type: $type, text length: ${text.length}")
+    
+    return try {
+      val tempFilePath: Path = context.filesDir.toPath().resolve("${type}_share.txt")
+      val tempFile = tempFilePath.toFile()
+      
+      if (tempFile.exists()) {
+        logToFile("writeTempFile - Deleting existing temp file: ${tempFile.name}")
+        tempFile.delete()
+      }
+      
+      Files.write(
+        tempFilePath,
+        text.toByteArray(StandardCharsets.UTF_8),
+        StandardOpenOption.CREATE,
+        StandardOpenOption.WRITE,
+        StandardOpenOption.TRUNCATE_EXISTING
+      )
+      
+      logToFile("writeTempFile - Success: Temp file created at ${tempFile.absolutePath}")
+      tempFile
+    } catch (e: IOException) {
+      log.error("Unable to write output to temp file", e)
+      logToFile("writeTempFile error - ${e.message}\n${getStackTraceString(e)}")
+      null
     }
+  }
 
   // ---------------------- 日志工具方法（完整实现） ----------------------
   /**
@@ -533,34 +535,28 @@ constructor(
                 allLines
               }
               
-              // 4. 覆盖写入保留的日志（清空原文件后写入）
+              // 4. 对保留的日志重新编号
+              val renumberedLines = keepLines.mapIndexed { index, line ->
+                line.replace(Regex("^\\[\\d+] "), "[${index + 1}] ")
+              }
+              
+              // 5. 覆盖写入编号后的日志
               Files.write(
                 logFile.toPath(),
-                keepLines,
+                renumberedLines,
                 StandardCharsets.UTF_8,
                 StandardOpenOption.WRITE,
                 StandardOpenOption.TRUNCATE_EXISTING
               )
               
-              // 5. 记录清理完成日志（写入本地文件）
+              // 6. 记录清理完成日志（写入本地文件）
               val endCleanMsg = "$cleanLogPrefix completed, kept ${keepLines.size} lines, new size: ${logFile.length() / 1024}KB"
               writeLogLineToFile(endCleanMsg)
               // 同步输出到Logcat，便于开发调试
               android.util.Log.d(logTag, endCleanMsg)
-
-                // 给保留的日志行重新编号
-                val renumberedLines = keepLines.mapIndexed { index, line ->
-                    line.replace(Regex("^\\[\\d+] "), "[${index + 1}] ")
-                }
-                Files.write(
-                    logFile.toPath(),
-                    renumberedLines,
-                    StandardCharsets.UTF_8,
-                    StandardOpenOption.WRITE,
-                    StandardOpenOption.TRUNCATE_EXISTING
-                )
-                logLineNumber.set(renumberedLines.size + 1) // 设置下一行的行号
-
+              
+              // 7. 更新行号计数器
+              logLineNumber.set(renumberedLines.size + 1)
             } finally {
               // 无论清理成功/失败，都标记清理流程结束（释放标记）
               isCleaning = false
@@ -574,10 +570,10 @@ constructor(
           // 同时输出到Logcat（开发时实时查看）
           android.util.Log.d(logTag, message)
         }
-      } catch (e: Exception) {
-        // 捕获日志写入/清理异常，避免影响主逻辑
-        val errorMsg = "Failed to process log (write/clean): ${e.message}"
-        android.util.Log.e(logTag, errorMsg, e)
+      } catch (t: Throwable) {
+        // 捕获所有异常，避免线程崩溃
+        val errorMsg = "Failed to process log (write/clean): ${t.message}"
+        android.util.Log.e(logTag, errorMsg, t)
         // 异常日志也写入本地（即使清理失败，也能记录问题）
         if (!isCleaning) {
           writeLogLineToFile(errorMsg)
@@ -586,7 +582,7 @@ constructor(
     }.start()
   }
 
-  /**
+/**
    * 底层日志写入方法（无清理逻辑，仅负责格式处理与文件写入）
    * 作用：避免logToFile的清理逻辑递归调用，统一日志格式
    * @param content 原始日志内容
@@ -594,16 +590,17 @@ constructor(
   private fun writeLogLineToFile(content: String) {
     try {
       // 生成带行号及时间戳的日志行
-        val timestamp = logFormatter.format(LocalDateTime.now())
-        val currentLine = logLineNumber.getAndIncrement()
-        val logLine = "[$currentLine] [$timestamp] [$logTag] $content\n"
+      val timestamp = logFormatter.format(LocalDateTime.now())
+      val currentLine = logLineNumber.getAndIncrement()
+      val logLine = "[$currentLine] [$timestamp] [$logTag] $content\n"
 
       // 确保日志文件存在（首次调用时创建）
       if (!logFile.exists()) {
         logFile.createNewFile()
         logLineNumber.set(1) // 重置行号为1
         // 记录文件初始化日志（仅首次创建时写入）
-        val initLine = "[$logLineNumber] [$timestamp] [$logTag] Log file initialized: ${logFile.absolutePath}\n"
+        val initLineNumber = logLineNumber.get()
+        val initLine = "[$initLineNumber] [$timestamp] [$logTag] Log file initialized: ${logFile.absolutePath}\n"
         logLineNumber.incrementAndGet() // 增加行号
         Files.write(
           logFile.toPath(),
