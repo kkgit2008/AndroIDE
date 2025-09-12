@@ -6,7 +6,7 @@
 * Run it on 'main' branch.
 
 * If you want, you can edit app version from 
-<a href="./composite-builds/build-logic/common/src/main/java/com/itsaky/androidide/build/config/ProjectConfig.kt"> here </a>
+<a href="./composite-builds/build-logic/common/src/main/java/com/itsaky/androidide/build/config/ProjectConfig.kt"> here </a> at line 118
 
 * Or, to build all architectures from 
 <a href="./composite-builds/build-logic/plugins/src/main/java/com/itsaky/androidide/plugins/conf/AndroidModuleConf.kt"> here </a> at line 48
