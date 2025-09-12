@@ -90,14 +90,14 @@ constructor(
 
   // 新增：日志相关变量
   private val logTag = "EditorBottomSheet"
-  private val logFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss.SSS", Locale.US)
+  private val logFormatter = DateTimeFormatter.ofPattern("yyMMdd HH:mm:ss.SSS", Locale.US)
   private val logFile by lazy {
-    File(context.filesDir, "editor_bottom_sheet_logs.txt")
+    File(context.filesDir, "EditorBottomSheet.clear.log")
   }
 
-  // 新增：日志文件控制常量（文件超过10MB时保留最近1000行）
-  private val MAX_LOG_FILE_SIZE = 10 * 1024 * 1024 // 10MB（字节）
-  private val KEEP_LAST_LOG_LINES = 1000          // 超过大小后保留的最近行数
+  // 新增：日志文件控制常量（日志文件超过指定大小时保留最近N行）
+  private val MAX_LOG_FILE_SIZE = 10 * 1024 * 1024 // 10MB以内，超过后开始清理
+  private val KEEP_LAST_LOG_LINES = 1000           // 超过大小后保留的最近行数
   // 新增：清理流程标记（@Volatile保证多线程可见性，防止递归调用）
   @Volatile
   private var isCleaning = false //是否正在清理日志
