@@ -11,7 +11,7 @@ env:
   APK_OUTPUT_FILE1: app-arm64-v8a-release.apk
   ARTIFACT_DIR: ./release-artifacts
   INFO_FILE: ./RELEASE_INFO
-  BETA_TAG: 'betaPre'
+  BETA_TAG: 'HaveNotReleasedYet'
   ### 固定的tag名称
 
 jobs:
@@ -114,7 +114,7 @@ jobs:
           echo ">>APK files:"
           ls -la ${{ env.APK_OUTPUT_PATH }}
 
-      - name: Verify APK exists
+      - name: Check APK exists
         run: |
           ### 检查APK文件是否存在
           if [ ! -f "${{ env.APK_OUTPUT_PATH }}/${{ env.APK_OUTPUT_FILE1 }}" ]; then
@@ -127,7 +127,7 @@ jobs:
       - name: Prepare release artifacts
         run: |
           ### 构建Artifact名称: apk-arm64V8-myTAG-time-shortSHA
-          ARTIFACT_NAME="apk-arm64V8-${{ steps.release_info.outputs.my_tag }}-${{ steps.set_vars.outputs.current_date }}-${{ steps.set_vars.outputs.short_sha }}.apk"
+          ARTIFACT_NAME="apk-arm64v8a-${{ steps.release_info.outputs.my_tag }}-${{ steps.set_vars.outputs.current_date }}-${{ steps.set_vars.outputs.short_sha }}.apk"
           
           ### 创建 artifacts 目录并复制文件
           mkdir -p ${{ env.ARTIFACT_DIR }}
@@ -152,13 +152,14 @@ jobs:
           ### 标题与tag名称相同
           name: ${{ env.BETA_TAG }}
           ### 固定的发布说明
-          body: "The APKs not released yet."
+          body: "The APKs have not released yet."
           ### 上传构建好的 artifacts
           files: ${{ env.ARTIFACT_DIR }}/*
-          ### 不设为草稿
+          ### 是否直接发布，不设为草稿
           draft: false
-          ### 标记为预发布
+          ### 是否标记为预发布
           prerelease: true
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
     
+
