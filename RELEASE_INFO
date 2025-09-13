@@ -1,8 +1,8 @@
-# 发布标签（必填，发布后会自动添加v前缀，即v2.7.1-xxx）
+# 发布标签（必填）
 TAG_NAME=2.7.1-beta7
 
-# 发布标题（必填）
-TITLE=2.7.1-beta7 shortSHA
+# 发布标题（可选）
+# TITLE=2.7.1-beta7 shortSHA
 
 # 目标分支（必填）
 BRANCH=main
@@ -15,4 +15,4 @@ NOTES=
 # What's Changed：
 - This update fixed the issue that caused crashes (with a relatively high occurrence probability) [#13](https://github.com/kkgit2008/apkxxxAndroidIDE/discussions/13)
 # FullChangelog: 
-* https://github.com/kkgit2008/apkxxxAndroidIDE/compare/2.7.1-beta6...v2.7.1-beta7
+* https://github.com/kkgit2008/apkxxxAndroidIDE/compare/2.7.1-beta6...2.7.1-beta7
