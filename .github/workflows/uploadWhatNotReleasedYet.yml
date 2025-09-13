@@ -1,0 +1,141 @@
+name: Beta Pre Release
+
+on:
+  workflow_dispatch: {}
+  ### 仅手动触发
+
+env:
+  BUILD_JAVA_VERSION: '17'
+  BUILD_JAVA_DIST: 'adopt'
+  APK_OUTPUT_PATH: ./core/app/build/outputs/apk/release
+  APK_OUTPUT_FILE1: app-arm64-v8a-release.apk
+  ARTIFACT_DIR: ./release-artifacts
+  INFO_FILE: ./RELEASE_INFO
+  BETA_TAG: 'betaPre'
+  ### 定义标签名称
+
+jobs:
+  build-beta-pre:
+    name: Build betaPre release
+    runs-on: ubuntu-latest
+    steps:
+      - name: Cancel previous runs
+        uses: styfle/cancel-workflow-action@0.12.1
+        with:
+          access_token: ${{ github.token }}
+
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          submodules: 'recursive'
+          fetch-depth: 0
+
+      - name: Set short SHA and date
+        id: set_vars
+        run: |
+          echo "short_sha=${GITHUB_SHA::7}" >> $GITHUB_OUTPUT
+          echo "current_date=$(date +'%y%m%d')" >> $GITHUB_OUTPUT
+          ### 格式为yymmdd
+
+      - name: Read release information from file
+        id: release_info
+        run: |
+          ### 验证RELEASE_INFO文件存在
+          if [ ! -f "${{ env.INFO_FILE }}" ]; then
+            echo "RELEASE_INFO file not found!"
+            exit 1
+          fi
+
+          ### 从RELEASE_INFO提取TAG_NAME
+          TAG_NAME=$(grep '^TAG_NAME=' ${{ env.INFO_FILE }} | cut -d'=' -f2- | tr -d '[:space:]')
+          if [ -z "$TAG_NAME" ]; then
+            echo "TAG_NAME not specified in RELEASE_INFO"
+            exit 1
+          fi
+
+          echo "my_tag=$TAG_NAME" >> $GITHUB_OUTPUT
+
+      - name: Check if tag exists
+        id: check_beta_tag
+        run: |
+          if git rev-parse "${{ env.BETA_TAG }}" >/dev/null 2>&1; then
+            echo "tag_exists=true" >> $GITHUB_OUTPUT
+            echo "Tag ${{ env.BETA_TAG }} already exists"
+          else
+            echo "tag_exists=false" >> $GITHUB_OUTPUT
+            echo "Tag ${{ env.BETA_TAG }} will be created"
+          fi
+
+      - name: Create and push tag (if not exists)
+        if: ${{ steps.check_beta_tag.outputs.tag_exists == 'false' }}
+        run: |
+          git config --global user.email "actions@github.com"
+          git config --global user.name "GitHub Actions"
+          git tag -a ${{ env.BETA_TAG }} -m "Beta pre-release tag"
+          git push origin ${{ env.BETA_TAG }}
+          echo "Created and pushed tag: ${{ env.BETA_TAG }}"
+          
+          ### 刷新本地标签信息
+          git fetch --tags
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          java-version: ${{ env.BUILD_JAVA_VERSION }}
+          distribution: ${{ env.BUILD_JAVA_DIST }}
+          cache: 'gradle'
+
+      - name: Make gradlew executable
+        run: chmod +x ./gradlew
+
+      - name: Restore Gradle cache
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.gradle/caches
+            ~/.gradle/wrapper
+          key: ${{ runner.os }}-gradle-${{ hashFiles('**/*.gradle*', '**/gradle-wrapper.properties') }}
+          restore-keys: |
+            ${{ runner.os }}-gradle-
+
+      - name: Build Release APK
+        run: ./gradlew :core:app:assembleRelease
+        continue-on-error: false
+
+      - name: Show APK paths
+        run: |
+            echo ">>APK files:"
+            ls -la ${{ env.APK_OUTPUT_PATH }}
+
+      - name: Verify APK exists
+        run: |
+          if [ ! -f "${{ env.APK_OUTPUT_PATH }}/${{ env.APK_OUTPUT_FILE1 }}" ]; then
+            echo ">>APK file not found at ${{ env.APK_OUTPUT_PATH }}/${{ env.APK_OUTPUT_FILE1 }}"
+            exit 1
+          fi
+          echo ">>APK size: $(du -h ${{ env.APK_OUTPUT_PATH }}/${{ env.APK_OUTPUT_FILE1 }})"
+
+      - name: Prepare release artifacts
+        run: |
+          ### 构建Artifact名称: apk-arm64V8-myTAG-time-shortSHA
+          ARTIFACT_NAME="apk-arm64V8-${{ steps.release_info.outputs.my_tag }}-${{ steps.set_vars.outputs.current_date }}-${{ steps.set_vars.outputs.short_sha }}.apk"
+          
+          mkdir -p ${{ env.ARTIFACT_DIR }}
+          cp ${{ env.APK_OUTPUT_PATH }}/${{ env.APK_OUTPUT_FILE1 }} ${{ env.ARTIFACT_DIR }}/$ARTIFACT_NAME
+          
+          ### 生成SHA256校验文件
+          sha256sum ${{ env.ARTIFACT_DIR }}/$ARTIFACT_NAME > ${{ env.ARTIFACT_DIR }}/$ARTIFACT_NAME.sha256
+          
+          echo ">>Prepared artifacts:"
+          ls -la ${{ env.ARTIFACT_DIR }}
+          
+          ### 保存Artifact名称供后续步骤使用
+          echo "artifact_name=$ARTIFACT_NAME" >> $GITHUB_OUTPUT
+        id: prepare_artifact
+
+      - name: Upload APK as artifact
+        uses: actions/upload-artifact@v3
+        with:
+          name: ${{ steps.prepare_artifact.outputs.artifact_name }}
+          path: ${{ env.ARTIFACT_DIR }}/*
+    
