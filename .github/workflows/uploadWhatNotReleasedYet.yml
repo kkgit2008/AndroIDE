@@ -152,7 +152,7 @@ jobs:
           ### 标题与tag名称相同
           name: ${{ env.BETA_TAG }}
           ### 固定的发布说明
-          body: "The APKs have not released yet."
+          body: "The APKs have not been released yet."
           ### 上传构建好的 artifacts
           files: ${{ env.ARTIFACT_DIR }}/*
           ### 是否直接发布，不设为草稿
