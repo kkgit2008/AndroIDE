@@ -127,7 +127,7 @@ jobs:
       - name: Prepare release artifacts
         run: |
           ### 构建Artifact名称: apk-arm64V8-myTAG-time-shortSHA
-          ARTIFACT_NAME="apk-arm64v8a-${{ steps.release_info.outputs.my_tag }}-${{ steps.set_vars.outputs.current_date }}-${{ steps.set_vars.outputs.short_sha }}.apk"
+          ARTIFACT_NAME="${{ steps.set_vars.outputs.current_date }}-${{ steps.set_vars.outputs.short_sha }}-apk-arm64v8a-${{ steps.release_info.outputs.my_tag }}.apk"
           
           ### 创建 artifacts 目录并复制文件
           mkdir -p ${{ env.ARTIFACT_DIR }}
