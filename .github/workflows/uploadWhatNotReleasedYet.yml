@@ -1,4 +1,4 @@
-name: Beta Pre Release
+name: Upload Beta Pre Release
 
 on:
   workflow_dispatch: {}
