@@ -12,7 +12,7 @@ env:
   ARTIFACT_DIR: ./release-artifacts
   INFO_FILE: ./RELEASE_INFO
   BETA_TAG: 'betaPre'
-  ### 定义标签名称
+  ### 固定的tag名称
 
 jobs:
   build-beta-pre:
@@ -33,31 +33,34 @@ jobs:
       - name: Set short SHA and date
         id: set_vars
         run: |
+          ### 提取7位短SHA值
           echo "short_sha=${GITHUB_SHA::7}" >> $GITHUB_OUTPUT
+          ### 生成yymmdd格式的日期字符串
           echo "current_date=$(date +'%y%m%d')" >> $GITHUB_OUTPUT
-          ### 格式为yymmdd
 
       - name: Read release information from file
         id: release_info
         run: |
-          ### 验证RELEASE_INFO文件存在
+          ### 验证RELEASE_INFO文件是否存在
           if [ ! -f "${{ env.INFO_FILE }}" ]; then
             echo "RELEASE_INFO file not found!"
             exit 1
           fi
 
-          ### 从RELEASE_INFO提取TAG_NAME
+          ### 从RELEASE_INFO提取TAG_NAME值
           TAG_NAME=$(grep '^TAG_NAME=' ${{ env.INFO_FILE }} | cut -d'=' -f2- | tr -d '[:space:]')
           if [ -z "$TAG_NAME" ]; then
             echo "TAG_NAME not specified in RELEASE_INFO"
             exit 1
           fi
 
+          ### 将提取的TAG_NAME输出到环境变量
           echo "my_tag=$TAG_NAME" >> $GITHUB_OUTPUT
 
       - name: Check if tag exists
         id: check_beta_tag
         run: |
+          ### 检查betaPre标签是否已存在
           if git rev-parse "${{ env.BETA_TAG }}" >/dev/null 2>&1; then
             echo "tag_exists=true" >> $GITHUB_OUTPUT
             echo "Tag ${{ env.BETA_TAG }} already exists"
@@ -69,8 +72,11 @@ jobs:
       - name: Create and push tag (if not exists)
         if: ${{ steps.check_beta_tag.outputs.tag_exists == 'false' }}
         run: |
+          ### 配置Git用户信息
           git config --global user.email "actions@github.com"
           git config --global user.name "GitHub Actions"
+          
+          ### 创建并推送betaPre标签
           git tag -a ${{ env.BETA_TAG }} -m "Beta pre-release tag"
           git push origin ${{ env.BETA_TAG }}
           echo "Created and pushed tag: ${{ env.BETA_TAG }}"
@@ -104,15 +110,18 @@ jobs:
 
       - name: Show APK paths
         run: |
-            echo ">>APK files:"
-            ls -la ${{ env.APK_OUTPUT_PATH }}
+          ### 显示APK输出目录内容
+          echo ">>APK files:"
+          ls -la ${{ env.APK_OUTPUT_PATH }}
 
       - name: Verify APK exists
         run: |
+          ### 检查APK文件是否存在
           if [ ! -f "${{ env.APK_OUTPUT_PATH }}/${{ env.APK_OUTPUT_FILE1 }}" ]; then
             echo ">>APK file not found at ${{ env.APK_OUTPUT_PATH }}/${{ env.APK_OUTPUT_FILE1 }}"
             exit 1
           fi
+          ### 显示APK文件大小
           echo ">>APK size: $(du -h ${{ env.APK_OUTPUT_PATH }}/${{ env.APK_OUTPUT_FILE1 }})"
 
       - name: Prepare release artifacts
@@ -120,12 +129,14 @@ jobs:
           ### 构建Artifact名称: apk-arm64V8-myTAG-time-shortSHA
           ARTIFACT_NAME="apk-arm64V8-${{ steps.release_info.outputs.my_tag }}-${{ steps.set_vars.outputs.current_date }}-${{ steps.set_vars.outputs.short_sha }}.apk"
           
+          ### 创建 artifacts 目录并复制文件
           mkdir -p ${{ env.ARTIFACT_DIR }}
           cp ${{ env.APK_OUTPUT_PATH }}/${{ env.APK_OUTPUT_FILE1 }} ${{ env.ARTIFACT_DIR }}/$ARTIFACT_NAME
           
           ### 生成SHA256校验文件
           sha256sum ${{ env.ARTIFACT_DIR }}/$ARTIFACT_NAME > ${{ env.ARTIFACT_DIR }}/$ARTIFACT_NAME.sha256
           
+          ### 显示准备好的 artifacts
           echo ">>Prepared artifacts:"
           ls -la ${{ env.ARTIFACT_DIR }}
           
@@ -133,9 +144,21 @@ jobs:
           echo "artifact_name=$ARTIFACT_NAME" >> $GITHUB_OUTPUT
         id: prepare_artifact
 
-      - name: Upload APK as artifact
-        uses: actions/upload-artifact@v3
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v1
         with:
-          name: ${{ steps.prepare_artifact.outputs.artifact_name }}
-          path: ${{ env.ARTIFACT_DIR }}/*
+          ### 使用固定的betaPre标签
+          tag_name: ${{ env.BETA_TAG }}
+          ### 标题与tag名称相同
+          name: ${{ env.BETA_TAG }}
+          ### 固定的发布说明
+          body: "The APKs not released yet."
+          ### 上传构建好的 artifacts
+          files: ${{ env.ARTIFACT_DIR }}/*
+          ### 不设为草稿
+          draft: false
+          ### 标记为预发布
+          prerelease: true
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
     
