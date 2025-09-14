@@ -5,8 +5,10 @@
 
 * Run action 'Upload Release'.(only on 'main' branch)
 
-* If you want, you can edit app version from 
+* If you want, you can edit app version code from 
 <a href="./composite-builds/build-logic/common/src/main/java/com/itsaky/androidide/build/config/ProjectConfig.kt"> here </a> at line 118
+
+* (BTW,app version name depends on the latest tag, NOT INCLUDE PRE-RELEASE tag)
 
 * Or, to build all architectures from 
 <a href="./composite-builds/build-logic/plugins/src/main/java/com/itsaky/androidide/plugins/conf/AndroidModuleConf.kt"> here </a> at line 48
