@@ -13,7 +13,6 @@
 * Or, to build all architectures from 
 <a href="./composite-builds/build-logic/plugins/src/main/java/com/itsaky/androidide/plugins/conf/AndroidModuleConf.kt"> here </a> at line 48
 
-
 <br> </br>
 
 <p> </p>
