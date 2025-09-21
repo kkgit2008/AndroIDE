@@ -482,5 +482,5 @@
   <string name="summary_open_source_licenses">查看开放源代码许可。</string>
   <string name="idepref_jdkVersion_title">JDK 版本</string>
   <string name="idepref_jdkVersion_summary">当前选择：%1$s（更改需重启）</string>
-  <string name="msg_drawer_for_files">左滑查看 @@文件列表@@</string>
+  <string name="msg_drawer_for_files">右滑查看 @@文件列表@@</string>
 </resources>
