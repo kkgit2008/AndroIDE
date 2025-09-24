@@ -1,34 +1,9 @@
 
 # HOW TO BUILD
 
-* Fork this repo.
-
-* Run it on 'main' branch.
-
-* If you want, you can edit app version from 
-<a href="./composite-builds/build-logic/common/src/main/java/com/itsaky/androidide/build/config/ProjectConfig.kt">here </a>
-.
-
-<p> </p>
-
-> see all [SNAPSHOTS](https://s01.oss.sonatype.org/content/repositories/snapshots/com/itsaky/androidide/gradle-plugin/maven-metadata.xml)
-
-<p> </p>
-
-> see all [ide-gradle-plugin](https://repo.maven.apache.org/maven2/com/itsaky/androidide/gradle-plugin/maven-metadata.xml)
+* Checko out 'main' branch
 
 <br> </br>
-
-# CHANGELOG
-
-* [All changelogs](https://github.com/kkgit2008/apkxxxAndroidIDE/pulls?q=is%3Apr+is%3Aclosed)
-
-<br> </br>
-
-# 🔥NOTICE
-
-* Forked from [AndroidIDEOfficial/AndroidIDE](https://github.com/AndroidIDEOfficial/AndroidIDE) 
-
 <br> </br>
 <br> </br>
 
