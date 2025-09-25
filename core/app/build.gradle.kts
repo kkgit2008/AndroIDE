@@ -48,9 +48,41 @@ buildscript {
 android {
   namespace = BuildConfig.packageName
 
+    // ****** custom signing ******
+    signingConfigs {
+        create("releaseee") {
+            val localProperties = Properties()
+            val localPropertiesFile = rootProject.file("local.properties")
+            enableV1Signing = true // enable V1 signing
+            enableV2Signing = true // enable V2 signing (recommended, Android 7.0+)
+            enableV3Signing = true // enable V3 signing (recommended, Android 9+)
+            if (localPropertiesFile.exists()) {
+                localProperties.load(FileInputStream(localPropertiesFile))
+
+                val storeFilePath = localProperties.getProperty("storeFile")
+                val storePasswordValue = localProperties.getProperty("storePassword")
+                val keyAliasValue = localProperties.getProperty("keyAlias")
+                val keyPasswordValue = localProperties.getProperty("keyPassword")
+
+                if (storeFilePath != null && storePasswordValue != null && 
+                    keyAliasValue != null && keyPasswordValue != null) {
+                    storeFile = file(storeFilePath)
+                    storePassword = storePasswordValue
+                    keyAlias = keyAliasValue
+                    keyPassword = keyPasswordValue
+                } else {
+                    logger.error("There is sth wrong with file content:local.properties !")
+                }
+            } else {
+                logger.error("File not exist:local.properties !")
+            }
+        }
+    }
+    // ****** custom signing ******
+
   defaultConfig {
     // Get version info from github action
-    val baseVersion = project.property("baseVersion") as? String ?: "v1.0.0"
+    val baseVersion = project.property("baseVersion") as? String ?: "1.0.0"
     val versionSuffix = project.property("versionSuffix") as? String ?: ""
     versionName = "${baseVersion}${versionSuffix}"
     
@@ -65,9 +97,12 @@ android {
   buildTypes {
     release {
       isShrinkResources = true
+      
+      signingConfig = signingConfigs.getByName("releaseee")
     }
     
     debug {
+      signingConfig = signingConfigs.getByName("releaseee")
       versionNameSuffix = "-debug"
       //applicationIdSuffix = '.debug'
     }
