@@ -14,8 +14,8 @@ env:
 
   APK_OUTPUT_PATH: 'core/app/build/outputs/apk/release'
   APK_OUTPUT_FILE: 'app-arm64-v8a-release.apk'
-  ARTIFACT_DIR: './release-artifacts'
-  INFO_FILE: './RELEASE_INFO'
+  ARTIFACT_DIR: 'release-artifacts'
+  INFO_FILE: 'RELEASE_INFO'
 
   ### Fixed tag name
   BETA_TAG: 'HaveNotReleasedYet'
@@ -47,21 +47,21 @@ jobs:
       - name: Read Release Information From File
         id: release_info
         run: |
-          ### Verify RELEASE_INFO file exists
+          ### Check if INFO_FILE file exists
           if [ ! -f "${{ env.INFO_FILE }}" ]; then
-            echo "RELEASE_INFO file not found!"
+            echo "${{ env.INFO_FILE }} file not found!"
             exit 1
           fi
 
-          ### Extract TAG_NAME value from RELEASE_INFO
-          TAG_NAME=$(grep '^TAG_NAME=' ${{ env.INFO_FILE }} | cut -d'=' -f2- | tr -d '[:space:]')
-          if [ -z "$TAG_NAME" ]; then
-            echo "TAG_NAME not specified in RELEASE_INFO"
+          ### Extract VER_NAME value from INFO_FILE
+          VER_NAME=$(grep '^VER_NAME=' ${{ env.INFO_FILE }} | cut -d'=' -f2- | tr -d '[:space:]')
+          if [ -z "$VER_NAME" ]; then
+            echo "VER_NAME not specified in ${{ env.INFO_FILE }}"
             exit 1
           fi
 
-          ### Output the extracted TAG_NAME to environment variable
-          echo "my_tag=$TAG_NAME" >> $GITHUB_OUTPUT
+          ### Output the extracted VER_NAME to environment variable
+          echo "my_tag=$VER_NAME" >> $GITHUB_OUTPUT
 
       - name: Check If Tag Exists
         id: check_beta_tag

@@ -13,8 +13,9 @@ on:
 env:
 
   ### Output configuration
-  DefaultAPK_Output_Path: './core/app/build/outputs/apk'
-  Artifact_Output_Path: './artifact_output'
+  DefaultAPK_Output_Path: 'core/app/build/outputs/apk'
+  Artifact_Output_Path: 'artifact_output'
+  INFO_FILE: 'RELEASE_INFO'
 
   ### Build configuration
   BUILD_JAVA_VERSION: '17'
@@ -29,9 +30,9 @@ jobs:
     strategy:
       matrix:
         abi_type: ['arm64-v8a']
-        build_type: ['release']
         # abi_type: ['arm64-v8a', 'armeabi-v7a', 'x86_64']
-        # build_type: ['debug', 'release']
+        # build_type: ['release']
+        build_type: ['debug', 'release']
     name: Build APK
     runs-on: ubuntu-latest
     steps:
@@ -46,12 +47,20 @@ jobs:
         with:
           submodules: 'recursive'
           fetch-depth: 0
-      
+
       - name: Set Short SHA
         id: set_sha
         run: echo "short_sha=${GITHUB_SHA::7}" >> $GITHUB_OUTPUT
-      
-      - name: Set Up JDK 17
+
+      - name: Read INFO_FILE
+        id: release_info
+        run: |
+          VER_SUFFIX=$(grep '^VER_SUFFIX=' ${{ env.INFO_FILE }} | cut -d'=' -f2- | sed -e 's/^[ \t]*//' -e 's/[ \t]*$//')-${{ steps.set_sha.outputs.short_sha }}
+          VER_NAME=$(grep '^VER_NAME=' ${{ env.INFO_FILE }} | cut -d'=' -f2- | sed -e 's/^[ \t]*//' -e 's/[ \t]*$//')
+          echo "ver_suffix=$VER_SUFFIX" >> $GITHUB_OUTPUT
+          echo "tag_name=$VER_NAME" >> $GITHUB_OUTPUT
+
+      - name: Set Up JDK
         uses: actions/setup-java@v4
         with:
           java-version: ${{ env.BUILD_JAVA_VERSION }}
@@ -73,7 +82,9 @@ jobs:
       - name: Build ${{ matrix.build_type }} APK
         run: |
           build_type=${{ matrix.build_type }}
-          ./gradlew :core:app:assemble${build_type^}
+          ./gradlew :core:app:assemble${build_type^} \
+            -PversionSuffix="${{ steps.release_info.outputs.ver_suffix }}" \
+            -PbaseVersion="${{ steps.release_info.outputs.tag_name }}"
 
       - name: Copy APK And Show Output Path
         run: |

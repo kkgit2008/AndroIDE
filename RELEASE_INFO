@@ -1,16 +1,27 @@
-# 发布标签（必填）
-TAG_NAME=2.7.1-beta1
+# Release Tag
+# (Required)
+VER_NAME=v2.7.1-beta1
 
-# 发布标题（可选，默认值为"TAG_NAME shortSHA"）
-# TITLE=2.7.1-beta1 shortSHA
+# Suffix For Version Name 
+# (Only available for informal releases. Optional, no suffix added by default)
+#VER_SUFFIX=
 
-# 目标分支（必填）
+# Release Title
+# (Only available for official releases. Optional, default value is "VER_NAME shortSHA")
+#TITLE=v2.7.1-beta1 shortSHA
+
+# Target Branch
+# (Only available for official releases. Required)
 BRANCH=main
 
-# 是否为预发布版本（可选，默认false）
-# PRERELEASE=true
+# Whether It Is A Pre-release Version
+# (Only available for official releases. Optional, default value is "false")
+#PRERELEASE=true
 
-# 发布说明（必填，从NOTES=开始到文件结束，支持markdown格式）
+# Release Notes
+# (Only available for official releases. Required, starts from "NOTES=" to the end of the file, Markdown format supported)
+# !!!This is the last property
+
 NOTES=
 # What's Changed:
 - 8.修复了“断开日志发送器”经常无法点击的问题(如果还是无法点击或者logsender页面不再输出日志，需重启IDE，这不是漏洞)
@@ -38,3 +49,4 @@ https://github.com/user-attachments/assets/c8b54c68-3f0f-4629-9b6b-d902e2592169
 
 - 1.首次安装时可跳过强制授权，只需点击三次 “下一步”
    - Can skip mandatory permissions during first installation by clicking the "Next" button three times
+

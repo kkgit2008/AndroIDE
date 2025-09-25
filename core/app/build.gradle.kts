@@ -48,14 +48,14 @@ buildscript {
 android {
   namespace = BuildConfig.packageName
 
-    // ****** 设置自定义签名 ******
+    // ****** custom signing ******
     signingConfigs {
         create("releaseee") {
             val localProperties = Properties()
             val localPropertiesFile = rootProject.file("local.properties")
-            enableV1Signing = true // 启用 V1 签名
-            enableV2Signing = true // 启用 V2 签名 (推荐，Android 7.0+)
-            enableV3Signing = true // 启用 V3 签名 (推荐，Android 9+)
+            enableV1Signing = true // enable V1 signing
+            enableV2Signing = true // enable V2 signing (recommended, Android 7.0+)
+            enableV3Signing = true // enable V3 signing (recommended, Android 9+)
             if (localPropertiesFile.exists()) {
                 localProperties.load(FileInputStream(localPropertiesFile))
 
@@ -78,21 +78,14 @@ android {
             }
         }
     }
-
-        buildTypes {
-            debug {
-                signingConfig = signingConfigs.getByName("releaseee")
-                //applicationIdSuffix '.debug'
-                versionNameSuffix = "-debug"
-            }
-            release {
-                signingConfig = signingConfigs.getByName("releaseee")
-
-            }
-        }
-    // ****** 设置自定义签名 ******
+    // ****** custom signing ******
 
   defaultConfig {
+    // Get version info from github action
+    val baseVersion = project.property("baseVersion") as? String ?: "1.0.0"
+    val versionSuffix = project.property("versionSuffix") as? String ?: ""
+    versionName = "${baseVersion}${versionSuffix}"
+    
     applicationId = BuildConfig.packageName
     vectorDrawables.useSupportLibrary = true
   }
@@ -104,6 +97,14 @@ android {
   buildTypes {
     release {
       isShrinkResources = true
+      
+      signingConfig = signingConfigs.getByName("releaseee")
+    }
+    
+    debug {
+      signingConfig = signingConfigs.getByName("releaseee")
+      versionNameSuffix = "-debug"
+      //applicationIdSuffix = '.debug'
     }
   }
 
