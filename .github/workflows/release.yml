@@ -1,4 +1,4 @@
-: Upload Release
+name: Upload Release
 
 on:
 #  push:
@@ -230,3 +230,4 @@ jobs:
           make_latest: ${{ steps.release_info.outputs.prerelease == 'false' }}
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
