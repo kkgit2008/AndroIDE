@@ -4,7 +4,7 @@ on:
 #  push:
 #    branches: [ main, master ]
 #    paths:
-#      ### Trigger only when the RELEASE_INFO file changes
+#      ### Trigger only when the specified file changes
 #      - 'RELEASE_INFO'
   workflow_dispatch: {}
   ### Manual trigger only
@@ -39,7 +39,6 @@ jobs:
           submodules: 'recursive'
           fetch-depth: 0
 
-      ### Retrieve short SHA in advance for replacing placeholders in ${{ env.INFO_FILE }}
       - name: Set Short SHA
         id: set_sha
         run: echo "short_sha=${GITHUB_SHA::7}" >> $GITHUB_OUTPUT
@@ -59,12 +58,15 @@ jobs:
           ### Replace all instances of 'shortSHA' in the file with the actual short_sha
           sed "s/shortSHA/${{ steps.set_sha.outputs.short_sha }}/g" ${{ env.INFO_FILE }} > $TEMP_FILE
 
-          ### Extract version tag
+          ### Extract version name
           VER_NAME=$(grep '^VER_NAME=' $TEMP_FILE | cut -d'=' -f2- | tr -d '[:space:]')
           if [ -z "$VER_NAME" ]; then
             echo "VER_NAME not specified in ${{ env.INFO_FILE }}"
             exit 1
           fi
+
+          ### !!!Fixed version name suffix
+          VER_SUFFIX=""
 
           ### Extract title
           if [ -z "$TITLE" ]; then
@@ -95,7 +97,8 @@ jobs:
           fi
 
           ### Output to GitHub environment variables
-          echo "tag_name=$VER_NAME" >> $GITHUB_OUTPUT
+          echo "ver_name=$VER_NAME" >> $GITHUB_OUTPUT
+          echo "ver_suffix=$VER_SUFFIX" >> $GITHUB_OUTPUT
           echo "title=$TITLE" >> $GITHUB_OUTPUT
           echo "branch=$BRANCH" >> $GITHUB_OUTPUT
           echo "prerelease=$PRERELEASE" >> $GITHUB_OUTPUT
@@ -105,6 +108,7 @@ jobs:
 
           ### Display the read information
           echo "Tag_name: $VER_NAME"
+          echo "Ver_suffix: $VER_SUFFIX"
           echo "Title: $TITLE"
           echo "Target branch: $BRANCH"
           echo "Pre-release: $PRERELEASE"
@@ -130,10 +134,11 @@ jobs:
       - name: Check If Tag Exists
         id: check_tag
         run: |
-          TAG="${{ steps.release_info.outputs.tag_name }}"
+          TAG="${{ steps.release_info.outputs.ver_name }}"
           if git rev-parse "$TAG" >/dev/null 2>&1; then
             echo "tag_exists=true" >> $GITHUB_OUTPUT
-            echo "Tag $TAG already exists"
+            echo "Warning! Tag $TAG already exists, exit now."
+            exit 1
           else
             echo "tag_exists=false" >> $GITHUB_OUTPUT
             echo "Tag $TAG will be created"
@@ -141,9 +146,8 @@ jobs:
 
       ### First create and push the tag (execute only if the tag does not exist)
       - name: Create And Push Tag
-        if: ${{ steps.check_tag.outputs.tag_exists == 'false' }}
         run: |
-          TAG="${{ steps.release_info.outputs.tag_name }}"
+          TAG="${{ steps.release_info.outputs.ver_name }}"
           git config --global user.email "actions@github.com"
           git config --global user.name "GitHub Actions"
           git tag -a $TAG -m "${{ steps.release_info.outputs.title }}"
@@ -154,8 +158,7 @@ jobs:
           git fetch --tags
 
       ### The following steps include conditional checks and will only execute if the tag does not exist
-      - name: Set Up JDK 17
-        if: ${{ steps.check_tag.outputs.tag_exists == 'false' }}
+      - name: Set Up JDK
         uses: actions/setup-java@v4
         with:
           java-version: ${{ env.BUILD_JAVA_VERSION }}
@@ -163,11 +166,9 @@ jobs:
           cache: 'gradle'
 
       - name: Make Gradlew Executable
-        if: ${{ steps.check_tag.outputs.tag_exists == 'false' }}
         run: chmod +x ./gradlew
 
       - name: Restore Gradle Cache
-        if: ${{ steps.check_tag.outputs.tag_exists == 'false' }}
         uses: actions/cache@v4
         with:
           path: |
@@ -188,33 +189,30 @@ jobs:
 #        continue-on-error: true
 
       - name: Build Release APK
-        if: ${{ steps.check_tag.outputs.tag_exists == 'false' }}
-        run: ./gradlew :core:app:assembleRelease
-        continue-on-error: false
+        run: |
+          ./gradlew :core:app:assembleRelease \
+            -PversionSuffix="${{ steps.release_info.outputs.ver_suffix }}" \
+            -PbaseVersion="${{ steps.release_info.outputs.ver_name }}"
 
       - name: Show APK Path
-        if: ${{ steps.check_tag.outputs.tag_exists == 'false' }}
         run: |
             echo ">>>APK path and subdirectories:"
             ls -laR ${{ env.APK_OUTPUT_PATH }}
 
       - name: Prepare Artifacts-APK
-        if: ${{ steps.check_tag.outputs.tag_exists == 'false' }}
         run: |
           mkdir -p ${{ env.ARTIFACT_DIR }}
           cp ${{ env.APK_OUTPUT_PATH }}/${{ env.DEFAULT_OUTPUT_FILE1 }}.apk ${{ env.ARTIFACT_DIR }}/${{ env.RENAME_OUTPUT_FILE2 }}_${{ steps.set_sha.outputs.short_sha }}.apk
 
       - name: Prepare Artifacts-SHA256
-        if: ${{ steps.check_tag.outputs.tag_exists == 'false' }}
         run: |
           sha256sum ${{ env.ARTIFACT_DIR }}/${{ env.RENAME_OUTPUT_FILE2 }}_${{ steps.set_sha.outputs.short_sha }}.apk > ${{ env.ARTIFACT_DIR }}/${{ env.RENAME_OUTPUT_FILE2 }}_${{ steps.set_sha.outputs.short_sha }}.apk.sha256
           ls -laR ${{ env.ARTIFACT_DIR }}
 
       - name: Create GitHub Release
-        if: ${{ steps.check_tag.outputs.tag_exists == 'false' }}
         uses: softprops/action-gh-release@v1
         with:
-          tag_name: "${{ steps.release_info.outputs.tag_name }}"
+          tag_name: "${{ steps.release_info.outputs.ver_name }}"
           name: ${{ steps.release_info.outputs.title }}
           body: ${{ steps.release_info.outputs.notes }}
           files: ${{ env.ARTIFACT_DIR }}/*
