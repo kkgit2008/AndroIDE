@@ -94,6 +94,6 @@ dependencies {
 
 tasks.register("versionName") {
     doLast {
-        print(project.rootProject.version)
+        print(">>>" + project.rootProject.version)
     }
 }
