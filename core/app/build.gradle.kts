@@ -104,6 +104,11 @@ android {
   buildTypes {
     release {
       isShrinkResources = true
+      versionNameSuffix "-dev"
+    }
+    
+    debug {
+      versionNameSuffix "-devDebug"
     }
   }
 
