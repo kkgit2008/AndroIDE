@@ -1,4 +1,4 @@
-name: Upload Beta Pre Release
+name: Upload Beta Pre Release (disabled)
 
 on:
   ### Only trigger manually
@@ -39,6 +39,9 @@ jobs:
       - name: Set Short SHA And Date
         id: set_vars
         run: |
+          ### !!!Disable this workflow
+          exit 1
+          
           ### Extract 7-character short commit hash
           echo "short_sha=${GITHUB_SHA::7}" >> $GITHUB_OUTPUT
           ### Generate date string in yymmdd format
