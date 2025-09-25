@@ -1,8 +1,8 @@
-# 版本名称后缀(仅非正式发布可用。可选，默认不添加前缀)
-VER_SUFFIX=-dev
+# 版本名称后缀(仅非正式发布可用。可选，默认不添加后缀)
+#VER_SUFFIX=-dev
 
 # 发布标签（必填）
-VER_NAME=v2.7.1-a
+VER_NAME=v2.7.1-beta1
 
 # 发布标题（仅正式发布可用。可选，默认值为"VER_NAME shortSHA"）
 #TITLE=v2.7.1-beta1 shortSHA
