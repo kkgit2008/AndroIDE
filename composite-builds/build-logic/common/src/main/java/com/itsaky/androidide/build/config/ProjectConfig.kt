@@ -35,7 +35,7 @@ object ProjectConfig {
 }
 
 private var shouldPrintNotAGitRepoWarning = true
-private var shouldPrintVersionName = false
+private var shouldPrintVersionName = true
 
 /**
  * Whether this build is being executed in the F-Droid build server.
