@@ -1,14 +1,17 @@
-# 发布标签（必填）
-TAG_NAME=2.7.1-beta1
+# 版本名称后缀(可选，默认不添加前缀。正式发布时不添加)
+VER_SUFFIX=-dev
 
-# 发布标题（可选，默认值为"TAG_NAME shortSHA"）
-# TITLE=2.7.1-beta1 shortSHA
+# 发布标签（必填）
+VER_NAME=v2.7.1-a
+
+# 发布标题（可选，默认值为"VER_NAME shortSHA"）
+#TITLE=v2.7.1-beta1 shortSHA
 
 # 目标分支（必填）
 BRANCH=main
 
 # 是否为预发布版本（可选，默认false）
-# PRERELEASE=true
+#PRERELEASE=true
 
 # 发布说明（必填，从NOTES=开始到文件结束，支持markdown格式）
 NOTES=
@@ -38,3 +41,4 @@ https://github.com/user-attachments/assets/c8b54c68-3f0f-4629-9b6b-d902e2592169
 
 - 1.首次安装时可跳过强制授权，只需点击三次 “下一步”
    - Can skip mandatory permissions during first installation by clicking the "Next" button three times
+
