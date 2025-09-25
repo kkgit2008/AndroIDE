@@ -1,6 +1,6 @@
 # Release Tag
 # (Required)
-VER_NAME=v2.7.1-beta1
+VER_NAME=v2.7.1-beta1test
 
 # Suffix For Version Name 
 # (Only available for informal releases. Optional, no suffix added by default)
@@ -12,11 +12,11 @@ VER_NAME=v2.7.1-beta1
 
 # Target Branch
 # (Only available for official releases. Required)
-BRANCH=main
+BRANCH=dev
 
 # Whether It Is A Pre-release Version
 # (Only available for official releases. Optional, default value is "false")
-#PRERELEASE=true
+PRERELEASE=true
 
 # Release Notes
 # (Only available for official releases. Required, starts from "NOTES=" to the end of the file, Markdown format supported)
