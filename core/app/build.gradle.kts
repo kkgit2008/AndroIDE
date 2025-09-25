@@ -78,21 +78,14 @@ android {
             }
         }
     }
-
-        buildTypes {
-            debug {
-                signingConfig = signingConfigs.getByName("releaseee")
-                //applicationIdSuffix '.debug'
-                versionNameSuffix = "-debug"
-            }
-            release {
-                signingConfig = signingConfigs.getByName("releaseee")
-
-            }
-        }
     // ****** 设置自定义签名 ******
 
   defaultConfig {
+    // Get version info from github action
+    def baseVersion = project.hasProperty('baseVersion') ? project.baseVersion : '1.0.0'
+    def versionSuffix = project.hasProperty('versionSuffix') ? project.versionSuffix : ''
+    versionName "${baseVersion}${versionSuffix}"
+    
     applicationId = BuildConfig.packageName
     vectorDrawables.useSupportLibrary = true
   }
@@ -104,11 +97,14 @@ android {
   buildTypes {
     release {
       isShrinkResources = true
-      versionNameSuffix "-dev"
+      
+      signingConfig = signingConfigs.getByName("releaseee")
     }
     
     debug {
-      versionNameSuffix "-devDebug"
+      signingConfig = signingConfigs.getByName("releaseee")
+      versionNameSuffix "-debug"
+      //applicationIdSuffix '.debug'
     }
   }
 
