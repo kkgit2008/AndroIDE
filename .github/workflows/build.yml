@@ -8,6 +8,7 @@ on:
 #      - 'RELEASE_INFO'
 #      - 'fastlane/**'
 #      - '.github/workflows/*.yml'
+  ### Can trigger manually
   workflow_dispatch: { }
 
 env:
