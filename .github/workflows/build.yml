@@ -52,13 +52,38 @@ jobs:
         id: set_sha
         run: echo "short_sha=${GITHUB_SHA::7}" >> $GITHUB_OUTPUT
 
-      - name: Read INFO_FILE
+
+      - name: Read And Process Release Information
         id: release_info
         run: |
-          VER_SUFFIX=$(grep '^VER_SUFFIX=' ${{ env.INFO_FILE }} | cut -d'=' -f2- | sed -e 's/^[ \t]*//' -e 's/[ \t]*$//')-${{ steps.set_sha.outputs.short_sha }}
-          VER_NAME=$(grep '^VER_NAME=' ${{ env.INFO_FILE }} | cut -d'=' -f2- | sed -e 's/^[ \t]*//' -e 's/[ \t]*$//')
+          ### Check if ${{ env.INFO_FILE }} file exists
+          if [ ! -f "${{ env.INFO_FILE }}" ]; then
+            echo "${{ env.INFO_FILE }} file not found!"
+            exit 1
+          fi
+
+          ### Extract version name
+          VER_NAME=$(grep '^VER_NAME=' ${{ env.INFO_FILE }} | cut -d'=' -f2- | tr -d '[:space:]')
+          if [ -z "$VER_NAME" ]; then
+            echo "VER_NAME not specified in ${{ env.INFO_FILE }}"
+            exit 1
+          fi
+
+          ### Extract version name suffix
+          VER_SUFFIX=$(grep '^VER_SUFFIX=' ${{ env.INFO_FILE }} | cut -d'=' -f2- | tr -d '[:space:]')
+          if [ -z "$VER_SUFFIX" ]; then
+            echo "VER_SUFFIX not specified in ${{ env.INFO_FILE }}"
+            exit 1
+          fi
+
+          ### Output to GitHub environment variables
+          echo "ver_name=$VER_NAME" >> $GITHUB_OUTPUT
           echo "ver_suffix=$VER_SUFFIX" >> $GITHUB_OUTPUT
-          echo "tag_name=$VER_NAME" >> $GITHUB_OUTPUT
+
+          ### Display the read information
+          echo "Tag_name: $VER_NAME"
+          echo "Ver_suffix: $VER_SUFFIX"
+
 
       - name: Set Up JDK
         uses: actions/setup-java@v4
@@ -84,7 +109,7 @@ jobs:
           build_type=${{ matrix.build_type }}
           ./gradlew :core:app:assemble${build_type^} \
             -PversionSuffix="${{ steps.release_info.outputs.ver_suffix }}" \
-            -PbaseVersion="${{ steps.release_info.outputs.tag_name }}"
+            -PbaseVersion="${{ steps.release_info.outputs.ver_name }}"
 
       - name: Copy APK And Show Output Path
         run: |
