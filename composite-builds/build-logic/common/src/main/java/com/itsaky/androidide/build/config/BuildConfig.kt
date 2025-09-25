@@ -25,7 +25,7 @@ import org.gradle.api.JavaVersion
 object BuildConfig {
 
   /** AndroidIDE's package name. */
-  const val packageName = "com.itsaky.androidide"
+  const val packageName = "lord.supervip.androide"
 
   /** The compile SDK version. */
   const val compileSdk = 34
