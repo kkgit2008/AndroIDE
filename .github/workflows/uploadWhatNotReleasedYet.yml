@@ -1,4 +1,4 @@
-: Upload Beta Pre Release (disabled)
+name: Upload Beta Pre Release (disabled)
 
 on:
   ### Only trigger manually
