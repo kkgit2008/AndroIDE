@@ -50,7 +50,7 @@ android {
 
   defaultConfig {
     // Get version info from github action
-    val baseVersion = project.property("baseVersion") as? String ?: "1.0.0"
+    val baseVersion = project.property("baseVersion") as? String ?: "v1.0.0"
     val versionSuffix = project.property("versionSuffix") as? String ?: ""
     versionName = "${baseVersion}${versionSuffix}"
     
@@ -65,12 +65,9 @@ android {
   buildTypes {
     release {
       isShrinkResources = true
-      
-      signingConfig = signingConfigs.getByName("releaseee")
     }
     
     debug {
-      signingConfig = signingConfigs.getByName("releaseee")
       versionNameSuffix = "-debug"
       //applicationIdSuffix = '.debug'
     }
