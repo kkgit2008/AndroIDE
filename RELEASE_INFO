@@ -1,6 +1,6 @@
 # Release Tag
 # (Required)
-VER_NAME=v2.7.1-beta1
+VER_NAME=v2.7.1-betaY
 
 # Suffix For Version Name 
 # (Only available for informal releases. Optional, no suffix added by default)
