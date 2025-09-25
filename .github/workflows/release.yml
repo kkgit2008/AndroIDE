@@ -13,9 +13,9 @@ env:
   BUILD_JAVA_VERSION: '17'
   BUILD_JAVA_DIST: 'adopt'
 
-  ARTIFACT_DIR: 'release-artifacts'
   INFO_FILE: 'RELEASE_INFO'
-
+  CHANGELOG_FILE: 'changelogs/README.MD'
+  ARTIFACT_DIR: 'release-artifacts'
   APK_OUTPUT_PATH: 'core/app/build/outputs/apk/release'
   
   ### No file extension, for easy renaming in subsequent steps
@@ -109,7 +109,10 @@ jobs:
           echo "Target branch: $BRANCH"
           echo "Pre-release: $PRERELEASE"
           echo "Notes length: $(echo -n "$NOTES" | wc -c) characters"
-          
+
+          ### Write changlog to md
+          echo "$NOTES" > $CHANGELOG_FILE
+
           ### Clean up temporary file
           rm -f $TEMP_FILE
 
