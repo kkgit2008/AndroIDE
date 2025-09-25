@@ -1,10 +1,10 @@
 # Release Tag
 # (Required)
-VER_NAME=v2.7.1-betaY
+VER_NAME=v2.7.1-beta1
 
 # Suffix For Version Name 
 # (Only available for informal releases. Optional, no suffix added by default)
-VER_SUFFIX=
+#VER_SUFFIX=
 
 # Release Title
 # (Only available for official releases. Optional, default value is "VER_NAME shortSHA")
@@ -15,11 +15,11 @@ VER_SUFFIX=
 BRANCH=main
 
 # Whether It Is A Pre-release Version
-# (Only available for official releases. Optional, default false)
+# (Only available for official releases. Optional, default value is "false")
 #PRERELEASE=true
 
 # Release Notes
-# (Only available for official releases. Required, starts from NOTES= to the end of the file, Markdown format supported)
+# (Only available for official releases. Required, starts from "NOTES=" to the end of the file, Markdown format supported)
 # !!!This is the last property
 
 NOTES=
