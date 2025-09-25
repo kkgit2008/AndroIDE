@@ -6,8 +6,8 @@ on:
 #    paths:
 #      ### Trigger only when the specified file changes
 #      - 'RELEASE_INFO'
+  ### Can trigger manually
   workflow_dispatch: {}
-  ### Manual trigger only
 
 env:
   BUILD_JAVA_VERSION: '17'
