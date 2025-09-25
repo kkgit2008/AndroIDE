@@ -13,10 +13,10 @@ env:
   BUILD_JAVA_VERSION: '17'
   BUILD_JAVA_DIST: 'adopt'
 
-  ARTIFACT_DIR: './release-artifacts'
-  INFO_FILE: './RELEASE_INFO'
+  ARTIFACT_DIR: 'release-artifacts'
+  INFO_FILE: 'RELEASE_INFO'
 
-  APK_OUTPUT_PATH: './core/app/build/outputs/apk/release'
+  APK_OUTPUT_PATH: 'core/app/build/outputs/apk/release'
   
   ### No file extension, for easy renaming in subsequent steps
   DEFAULT_OUTPUT_FILE1: 'app-arm64-v8a-release'
@@ -39,7 +39,7 @@ jobs:
           submodules: 'recursive'
           fetch-depth: 0
 
-      ### Retrieve short SHA in advance for replacing placeholders in RELEASE_INFO
+      ### Retrieve short SHA in advance for replacing placeholders in ${{ env.INFO_FILE }}
       - name: Set Short SHA
         id: set_sha
         run: echo "short_sha=${GITHUB_SHA::7}" >> $GITHUB_OUTPUT
@@ -47,9 +47,9 @@ jobs:
       - name: Read And Process Release Information
         id: release_info
         run: |
-          ### Verify that the RELEASE_INFO file exists
+          ### Check if ${{ env.INFO_FILE }} file exists
           if [ ! -f "${{ env.INFO_FILE }}" ]; then
-            echo "RELEASE_INFO file not found!"
+            echo "${{ env.INFO_FILE }} file not found!"
             exit 1
           fi
 
@@ -60,15 +60,15 @@ jobs:
           sed "s/shortSHA/${{ steps.set_sha.outputs.short_sha }}/g" ${{ env.INFO_FILE }} > $TEMP_FILE
 
           ### Extract version tag
-          TAG_NAME=$(grep '^TAG_NAME=' $TEMP_FILE | cut -d'=' -f2- | tr -d '[:space:]')
-          if [ -z "$TAG_NAME" ]; then
-            echo "TAG_NAME not specified in RELEASE_INFO"
+          VER_NAME=$(grep '^VER_NAME=' $TEMP_FILE | cut -d'=' -f2- | tr -d '[:space:]')
+          if [ -z "$VER_NAME" ]; then
+            echo "VER_NAME not specified in ${{ env.INFO_FILE }}"
             exit 1
           fi
 
           ### Extract title
           if [ -z "$TITLE" ]; then
-            TITLE="${TAG_NAME} ${{ steps.set_sha.outputs.short_sha }}"
+            TITLE="${VER_NAME} ${{ steps.set_sha.outputs.short_sha }}"
           else
             ### Remove leading and trailing spaces
             TITLE=$(echo "$TITLE" | sed 's/^[[:space:]]*//;s/[[:space:]]*$//')
@@ -77,7 +77,7 @@ jobs:
           ### Extract target branch
           BRANCH=$(grep '^BRANCH=' $TEMP_FILE | cut -d'=' -f2- | tr -d '[:space:]')
           if [ -z "$BRANCH" ]; then
-            echo "BRANCH not specified in RELEASE_INFO"
+            echo "BRANCH not specified in ${{ env.INFO_FILE }}"
             exit 1
           fi
 
@@ -90,12 +90,12 @@ jobs:
           ### Extract release notes (from the line starting with "NOTES=" to the end of the file)
           NOTES=$(awk 'BEGIN {found=0} /^NOTES=/{found=1; sub(/^NOTES=/, ""); print; next} found' $TEMP_FILE)
           if [ -z "$NOTES" ]; then
-            echo "NOTES not specified in RELEASE_INFO"
+            echo "NOTES not specified in ${{ env.INFO_FILE }}"
             exit 1
           fi
 
           ### Output to GitHub environment variables
-          echo "tag_name=$TAG_NAME" >> $GITHUB_OUTPUT
+          echo "tag_name=$VER_NAME" >> $GITHUB_OUTPUT
           echo "title=$TITLE" >> $GITHUB_OUTPUT
           echo "branch=$BRANCH" >> $GITHUB_OUTPUT
           echo "prerelease=$PRERELEASE" >> $GITHUB_OUTPUT
@@ -104,7 +104,7 @@ jobs:
           echo "EOF" >> $GITHUB_OUTPUT
 
           ### Display the read information
-          echo "Tag_name: $TAG_NAME"
+          echo "Tag_name: $VER_NAME"
           echo "Title: $TITLE"
           echo "Target branch: $BRANCH"
           echo "Pre-release: $PRERELEASE"
