@@ -14,7 +14,6 @@ env:
   BUILD_JAVA_DIST: 'adopt'
 
   INFO_FILE: 'RELEASE_INFO'
-  CHANGELOG_FILE: 'changelogs/README.MD'
   ARTIFACT_DIR: 'release-artifacts'
   APK_OUTPUT_PATH: 'core/app/build/outputs/apk/release'
   
@@ -119,9 +118,6 @@ jobs:
             echo "${{ env.CHANGELOG_FILE }} file not found!"
             exit 1
           fi
-
-          ### Write changlog to md
-          echo "$NOTES" > $CHANGELOG_FILE
 
           ### Clean up temporary file
           rm -f $TEMP_FILE
