@@ -1,7 +1,7 @@
 name: Upload Beta Pre Release (disabled)
 
 on:
-  ### Only trigger manually
+  ### Can trigger manually
   workflow_dispatch: {}
 
 env:
