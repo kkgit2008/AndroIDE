@@ -48,21 +48,19 @@ jobs:
           submodules: 'recursive'
           fetch-depth: 0
 
-      - name: Read INFO_FILE
-        id: release_info
-        run: |
-          VER_SUFFIX=$(grep '^VER_SUFFIX=' ${{ env.INFO_FILE }} | cut -d'=' -f2- | sed -e 's/^[ \t]*//' -e 's/[ \t]*$//')
-          VER_NAME=$(grep '^VER_NAME=' ${{ env.INFO_FILE }} | cut -d'=' -f2- | sed -e 's/^[ \t]*//' -e 's/[ \t]*$//')
-          #VER_SUFFIX=$(grep '^VER_SUFFIX=' RELEASE_INFO | cut -d'=' -f2- | sed -e 's/^[ \t]*//' -e 's/[ \t]*$//')
-          #VER_NAME=$(grep '^VER_NAME=' RELEASE_INFO | cut -d'=' -f2- | sed -e 's/^[ \t]*//' -e 's/[ \t]*$//')
-          echo "ver_suffix=$VER_SUFFIX" >> $GITHUB_OUTPUT
-          echo "tag_name=$VER_NAME" >> $GITHUB_OUTPUT
-
       - name: Set Short SHA
         id: set_sha
         run: echo "short_sha=${GITHUB_SHA::7}" >> $GITHUB_OUTPUT
 
-      - name: Set Up JDK 17
+      - name: Read INFO_FILE
+        id: release_info
+        run: |
+          VER_SUFFIX=$(grep '^VER_SUFFIX=' ${{ env.INFO_FILE }} | cut -d'=' -f2- | sed -e 's/^[ \t]*//' -e 's/[ \t]*$//')-${{ steps.set_sha.outputs.short_sha }}
+          VER_NAME=$(grep '^VER_NAME=' ${{ env.INFO_FILE }} | cut -d'=' -f2- | sed -e 's/^[ \t]*//' -e 's/[ \t]*$//')
+          echo "ver_suffix=$VER_SUFFIX" >> $GITHUB_OUTPUT
+          echo "tag_name=$VER_NAME" >> $GITHUB_OUTPUT
+
+      - name: Set Up JDK
         uses: actions/setup-java@v4
         with:
           java-version: ${{ env.BUILD_JAVA_VERSION }}
