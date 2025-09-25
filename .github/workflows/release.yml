@@ -1,4 +1,4 @@
-name: Upload Release
+: Upload Release
 
 on:
 #  push:
@@ -46,7 +46,7 @@ jobs:
       - name: Read And Process Release Information
         id: release_info
         run: |
-          ### Check if ${{ env.INFO_FILE }} file exists
+          ### Check if INFO_FILE file exists
           if [ ! -f "${{ env.INFO_FILE }}" ]; then
             echo "${{ env.INFO_FILE }} file not found!"
             exit 1
@@ -113,6 +113,12 @@ jobs:
           echo "Target branch: $BRANCH"
           echo "Pre-release: $PRERELEASE"
           echo "Notes length: $(echo -n "$NOTES" | wc -c) characters"
+
+          ### Check if CHANGELOG_FILE file exists
+          if [ ! -f "${{ env.CHANGELOG_FILE }}" ]; then
+            echo "${{ env.CHANGELOG_FILE }} file not found!"
+            exit 1
+          fi
 
           ### Write changlog to md
           echo "$NOTES" > $CHANGELOG_FILE
@@ -224,4 +230,3 @@ jobs:
           make_latest: ${{ steps.release_info.outputs.prerelease == 'false' }}
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
