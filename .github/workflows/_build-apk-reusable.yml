@@ -1,0 +1,235 @@
+
+# ===================================================================
+#  Reusable : Can build all ABI/build-type and upload APK + mapping
+#  Read file RELEASE_INFO and get params：
+#    - VER_NAME          （Required）
+#    - VER_SUFFIX        （Optional，default to '-dev'）
+#    - TITLE / BRANCH / PRERELEASE / NOTES  (Only read when release)
+# ===================================================================
+
+
+
+name: Build APK (Reusable)
+
+on:
+  workflow_call:
+  
+    inputs:
+      build_type:
+        description: 'debug or release'
+        required: true
+        type: string
+      abi_type:
+        description: 'e.g. arm64-v8a'
+        required: true
+        type: string
+      info_file:
+        description: 'path to RELEASE_INFO (repo root relative)'
+        required: false
+        default: 'RELEASE_INFO'
+        type: string
+      
+      # Optional parameters
+      
+      override_ver_name:
+        description: 'force use this ver_name'
+        required: false
+        type: string
+      override_ver_suffix:
+        description: 'force use this ver_suffix'
+        required: false
+        type: string
+      override_title:
+        description: 'force use this title (release only)'
+        required: false
+        type: string
+      override_prerelease:
+        description: 'force use this prerelease flag (release only)'
+        required: false
+        type: string
+
+    outputs:
+      ver_name:
+        description: 'parsed or overridden VER_NAME'
+        value: ${{ jobs.build.outputs.ver_name }}
+      ver_suffix:
+        description: 'parsed or overridden VER_SUFFIX'
+        value: ${{ jobs.build.outputs.ver_suffix }}
+      short_sha:
+        description: 'short SHA of the run'
+        value: ${{ jobs.build.outputs.short_sha }}
+      title:
+        description: 'parsed or overridden TITLE (release only)'
+        value: ${{ jobs.build.outputs.title }}
+      branch:
+        description: 'parsed BRANCH (release only)'
+        value: ${{ jobs.build.outputs.branch }}
+      prerelease:
+        description: 'parsed or overridden PRERELEASE (release only)'
+        value: ${{ jobs.build.outputs.prerelease }}
+      notes:
+        description: 'parsed NOTES (release only)'
+        value: ${{ jobs.build.outputs.notes }}
+
+env:
+  APK_OUTPUT_DIR: 'core/app/build/outputs/apk/'
+  ARTIFACT_OUTPUT_DIR: 'artifact_output/'
+
+jobs:
+  build:
+    name: Build ${{ inputs.build_type }} APK (${{ inputs.abi_type }})
+    runs-on: ubuntu-latest
+    outputs:
+      ver_name:  ${{ steps.info.outputs.ver_name }}
+      ver_suffix: ${{ steps.info.outputs.ver_suffix }}
+      short_sha:  ${{ steps.sha.outputs.short_sha }}
+      title:      ${{ steps.info.outputs.title }}
+      branch:     ${{ steps.info.outputs.branch }}
+      prerelease: ${{ steps.info.outputs.prerelease }}
+      notes:      ${{ steps.info.outputs.notes }}
+
+    steps:
+    
+      - name: Checkout Code
+        uses: actions/checkout@v4
+        with:
+          submodules: recursive
+          # Only Read The Last 1 Commit
+          fetch-depth: 1
+
+      - name: Set Short SHA
+        id: sha
+        run: echo "short_sha=${GITHUB_SHA::7}" >> $GITHUB_OUTPUT
+
+      - name: Read & Parse RELEASE_INFO
+        id: info
+        shell: bash
+        run: |
+          set -euo pipefail
+          INFO_FILE="${{ inputs.info_file }}"
+
+          # Exit When File Not Exists Or Is Empty
+          if [ ! -s "$INFO_FILE" ]; then
+            echo "$INFO_FILE not found or empty"
+            exit 1
+          fi
+
+          # Set Temp File To Handle shortSHA In INFO_FILE
+          TEMP=$(mktemp)
+          sed "s/shortSHA/${{ steps.sha.outputs.short_sha }}/g" "$INFO_FILE" > "$TEMP"
+
+          # --------------- Common ---------------
+          VER_NAME=$(grep '^VER_NAME=' "$TEMP" | cut -d'=' -f2- | tr -d '[:space:]' || true)
+          [ -z "$VER_NAME" ] && { echo "VER_NAME missing"; exit 1; }
+          
+          # Overwrite by input param
+          if [ -n "${{ inputs.override_ver_name }}" ]; then
+            VER_NAME="${{ inputs.override_ver_name }}"
+          fi
+
+          VER_SUFFIX=$(grep '^VER_SUFFIX=' "$TEMP" | cut -d'=' -f2- | tr -d '[:space:]' || true)
+          [ -z "$VER_SUFFIX" ] && VER_SUFFIX="-dev"
+          if [ -n "${{ inputs.override_ver_suffix }}" ]; then
+            VER_SUFFIX="${{ inputs.override_ver_suffix }}"
+          fi
+
+          # --------------- release Only ---------------
+          if [ "${{ inputs.build_type }}" == "release" ]; then
+            TITLE=$(grep '^TITLE=' "$TEMP" | cut -d'=' -f2- | sed 's/^[[:space:]]*//;s/[[:space:]]*$//' || true)
+            [ -z "$TITLE" ] && TITLE="${VER_NAME} ${{ steps.sha.outputs.short_sha }}"
+            [ -n "${{ inputs.override_title }}" ] && TITLE="${{ inputs.override_title }}"
+
+            BRANCH=$(grep '^BRANCH=' "$TEMP" | cut -d'=' -f2- | tr -d '[:space:]' || true)
+            [ -z "$BRANCH" ] && { echo "BRANCH missing"; exit 1; }
+
+            PRERELEASE=$(grep '^PRERELEASE=' "$TEMP" | cut -d'=' -f2- | tr -d '[:space:]' || true)
+            [ -z "$PRERELEASE" ] && PRERELEASE="true"
+            [ -n "${{ inputs.override_prerelease }}" ] && PRERELEASE="${{ inputs.override_prerelease }}"
+
+            NOTES=$(awk 'BEGIN{f=0} /^NOTES=/{f=1; sub(/^NOTES=/,""); print; next} f' "$TEMP" || true)
+            [ -z "$NOTES" ] && { echo "NOTES missing"; exit 1; }
+
+            # Set Params
+            echo "title=$TITLE"      >> $GITHUB_OUTPUT
+            echo "branch=$BRANCH"    >> $GITHUB_OUTPUT
+            echo "prerelease=$PRERELEASE" >> $GITHUB_OUTPUT
+            
+            # Write File Safely
+            echo "notes<<EOF" >> $GITHUB_OUTPUT
+            echo "$NOTES"     >> $GITHUB_OUTPUT
+            echo "EOF"        >> $GITHUB_OUTPUT
+          fi
+
+          echo "ver_name=$VER_NAME"     >> $GITHUB_OUTPUT
+          echo "ver_suffix=$VER_SUFFIX" >> $GITHUB_OUTPUT
+
+          # ---------- Print Params For Debugging ----------
+          echo ">>>> RELEASE_INFO parsed:"
+          echo "  ver_name : $VER_NAME"
+          echo "  ver_suffix: $VER_SUFFIX"
+          if [ "${{ inputs.build_type }}" == "release" ]; then
+            echo "  title    : $TITLE"
+            echo "  branch   : $BRANCH"
+            echo "  prerelease: $PRERELEASE"
+            echo "  notes len : $(echo -n "$NOTES" | wc -c)"
+          fi
+
+          rm -f "$TEMP"
+
+      # ---------- JDK & Gradle ----------
+      - name: Set Up JDK
+        uses: actions/setup-java@v4
+        with:
+          java-version: '17'
+          distribution: 'adopt'
+
+      - name: Make gradlew executable
+        run: chmod +x ./gradlew
+
+      - name: Restore Gradle Cache
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.gradle/caches
+            ~/.gradle/wrapper
+            ~/.gradle/caches/build-cache-*
+          key: ${{ runner.os }}-gradle-${{ hashFiles('**/*.gradle*','**/gradle-wrapper.properties') }}
+          restore-keys: |
+            ${{ runner.os }}-gradle-
+
+      # ---------- Build APK ----------
+      - name: Build ${{ inputs.build_type }} APK
+        run: |
+          ./gradlew :core:app:assemble${{ inputs.build_type }} \
+            -PversionSuffix="${{ steps.info.outputs.ver_suffix }}" \
+            -PbaseVersion="${{ steps.info.outputs.ver_name }}"
+
+      - name: Show APK_OUTPUT_DIR
+        run: ls -laR ${{ env.APK_OUTPUT_DIR }}
+
+      # ---------- Copy & Rename Files----------
+      - name: Copy & Rename APK
+        run: |
+          mkdir -p ${{ env.ARTIFACT_OUTPUT_DIR }}${{ inputs.abi_type }}
+          SRC=${{ env.APK_OUTPUT_DIR }}${{ inputs.build_type }}/app-${{ inputs.abi_type }}-${{ inputs.build_type }}.apk
+          DST=${{ env.ARTIFACT_OUTPUT_DIR }}${{ inputs.abi_type }}/AndroIDE${{ steps.info.outputs.ver_suffix }}-${{ inputs.abi_type }}-${{ inputs.build_type }}.apk
+          cp "$SRC" "$DST"
+          sha256sum "$DST" > "$DST.sha256"
+
+      - name: Show Artifact Tree
+        run: ls -laR ${{ env.ARTIFACT_OUTPUT_DIR }}
+
+      # ---------- Upload Files ----------
+      - name: Upload APK Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: AndroIDE${{ steps.info.outputs.ver_suffix }}-${{ inputs.abi_type }}-${{ inputs.build_type }}
+          path: ${{ env.ARTIFACT_OUTPUT_DIR }}${{ inputs.abi_type }}/*
+
+      - name: Upload Mapping (release only)
+        if: ${{ inputs.build_type == 'release' }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: release-mappings-${{ steps.sha.outputs.short_sha }}
+          path: '**/build/outputs/mapping'
+
