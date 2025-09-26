@@ -1,229 +1,127 @@
 name: Upload Release
 
 on:
-#  push:
-#    branches: [ main, master ]
-#    paths:
-#      ### Trigger only when the specified file changes
-#      - 'RELEASE_INFO'
-  ### Can trigger manually
+  push:
+    #branches: [ "master", "main" ]
+    branches: [ "main" ]
+    paths: 
+      - 'RELEASE_INFO'
   workflow_dispatch: {}
 
-env:
-  BUILD_JAVA_VERSION: '17'
-  BUILD_JAVA_DIST: 'adopt'
-
-  INFO_FILE: 'RELEASE_INFO'
-  ARTIFACT_DIR: 'release-artifacts'
-  APK_OUTPUT_PATH: 'core/app/build/outputs/apk/release'
-  
-  ### No file extension, for easy renaming in subsequent steps
-  DEFAULT_OUTPUT_FILE1: 'app-arm64-v8a-release'
-  RENAME_OUTPUT_FILE2: 'AndroIDE_arm64-v8a_release'
+# Cancel old runs
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
 
 jobs:
-  validate-and-release:
-    name: Validate And Create Release
+
+  # ---------- 1. Create git tag ----------
+  create_tag:
     runs-on: ubuntu-latest
+    outputs:
+      ver_name: ${{ steps.info.outputs.ver_name }}
     steps:
-
-      - name: Cancel Previous Runs
-        uses: styfle/cancel-workflow-action@0.12.1
-        with:
-          access_token: ${{ github.token }}
-
-      - name: Checkout Code
+      - name: Checkout
         uses: actions/checkout@v4
         with:
-          submodules: 'recursive'
+          submodules: recursive
           fetch-depth: 0
 
-      - name: Set Short SHA
-        id: set_sha
-        run: echo "short_sha=${GITHUB_SHA::7}" >> $GITHUB_OUTPUT
-
-      - name: Read And Process Release Information
-        id: release_info
+      - name: Parse RELEASE_INFO
+        id: info
         run: |
-          ### Check if INFO_FILE file exists
-          if [ ! -f "${{ env.INFO_FILE }}" ]; then
-            echo "${{ env.INFO_FILE }} file not found!"
+          set -euo pipefail
+          INFO_FILE=RELEASE_INFO
+          if [ ! -s "$INFO_FILE" ]; then
+            echo "$INFO_FILE not found or empty"
             exit 1
           fi
+          VER=$(grep '^VER_NAME=' "$INFO_FILE" | cut -d'=' -f2- | tr -d '[:space:]')
+          echo "ver_name=$VER" >> $GITHUB_OUTPUT
 
-          ### Create a temporary file to store processed content
-          TEMP_FILE=$(mktemp)
-          
-          ### Replace all instances of 'shortSHA' in the file with the actual short_sha
-          sed "s/shortSHA/${{ steps.set_sha.outputs.short_sha }}/g" ${{ env.INFO_FILE }} > $TEMP_FILE
-
-          ### Extract version name
-          VER_NAME=$(grep '^VER_NAME=' $TEMP_FILE | cut -d'=' -f2- | tr -d '[:space:]')
-          if [ -z "$VER_NAME" ]; then
-            echo "VER_NAME not specified in ${{ env.INFO_FILE }}"
-            exit 1
-          fi
-
-          ### !!!Fixed version name suffix
-          VER_SUFFIX=""
-
-          ### Extract title
-          if [ -z "$TITLE" ]; then
-            TITLE="${VER_NAME} ${{ steps.set_sha.outputs.short_sha }}"
-          else
-            ### Remove leading and trailing spaces
-            TITLE=$(echo "$TITLE" | sed 's/^[[:space:]]*//;s/[[:space:]]*$//')
-          fi
-
-          ### Extract target branch
-          BRANCH=$(grep '^BRANCH=' $TEMP_FILE | cut -d'=' -f2- | tr -d '[:space:]')
-          if [ -z "$BRANCH" ]; then
-            echo "BRANCH not specified in ${{ env.INFO_FILE }}"
-            exit 1
-          fi
-
-          ### Extract prerelease flag (default to false)
-          PRERELEASE=$(grep '^PRERELEASE=' $TEMP_FILE | cut -d'=' -f2- | tr -d '[:space:]')
-          if [ -z "$PRERELEASE" ]; then
-            PRERELEASE="false"
-          fi
-
-          ### Extract release notes (from the line starting with "NOTES=" to the end of the file)
-          NOTES=$(awk 'BEGIN {found=0} /^NOTES=/{found=1; sub(/^NOTES=/, ""); print; next} found' $TEMP_FILE)
-          if [ -z "$NOTES" ]; then
-            echo "NOTES not specified in ${{ env.INFO_FILE }}"
-            exit 1
-          fi
-
-          ### Output to GitHub environment variables
-          echo "ver_name=$VER_NAME" >> $GITHUB_OUTPUT
-          echo "ver_suffix=$VER_SUFFIX" >> $GITHUB_OUTPUT
-          echo "title=$TITLE" >> $GITHUB_OUTPUT
-          echo "branch=$BRANCH" >> $GITHUB_OUTPUT
-          echo "prerelease=$PRERELEASE" >> $GITHUB_OUTPUT
-          echo "notes<<EOF" >> $GITHUB_OUTPUT
-          echo "$NOTES" >> $GITHUB_OUTPUT
-          echo "EOF" >> $GITHUB_OUTPUT
-
-          ### Display the read information
-          echo "Tag_name: $VER_NAME"
-          echo "Ver_suffix: $VER_SUFFIX"
-          echo "Title: $TITLE"
-          echo "Target branch: $BRANCH"
-          echo "Pre-release: $PRERELEASE"
-          echo "Notes length: $(echo -n "$NOTES" | wc -c) characters"
-
-          ### Check if CHANGELOG_FILE file exists
-          if [ ! -f "${{ env.CHANGELOG_FILE }}" ]; then
-            echo "${{ env.CHANGELOG_FILE }} file not found!"
-            exit 1
-          fi
-
-          ### Clean up temporary file
-          rm -f $TEMP_FILE
-
-      - name: Check Current Branch Matches Target Branch
+      - name: Check Branch vs RELEASE_INFO
         run: |
-          CURRENT_BRANCH=$(git rev-parse --abbrev-ref HEAD)
-          echo "Current branch: $CURRENT_BRANCH"
-          echo "Target branch: ${{ steps.release_info.outputs.branch }}"
-          
-          if [ "$CURRENT_BRANCH" != "${{ steps.release_info.outputs.branch }}" ]; then
-            echo "This release is configured for branch '${{ steps.release_info.outputs.branch }}' but current branch is '$CURRENT_BRANCH'"
+          BRANCH=$(grep '^BRANCH=' RELEASE_INFO | cut -d'=' -f2- | tr -d '[:space:]')
+          CURRENT=$(git rev-parse --abbrev-ref HEAD)
+          if [ "$CURRENT" != "$BRANCH" ]; then
+            echo "Release configured for '$BRANCH', but current is '$CURRENT'"
             exit 1
           fi
 
-      - name: Check If Tag Exists
-        id: check_tag
+      - name: Check If Tag Exist
         run: |
-          TAG="${{ steps.release_info.outputs.ver_name }}"
+          TAG="${{ steps.info.outputs.ver_name }}"
           if git rev-parse "$TAG" >/dev/null 2>&1; then
-            echo "tag_exists=true" >> $GITHUB_OUTPUT
-            echo "Warning! Tag $TAG already exists, exit now."
+            echo "Tag $TAG already exists"
             exit 1
-          else
-            echo "tag_exists=false" >> $GITHUB_OUTPUT
-            echo "Tag $TAG will be created"
           fi
 
-      ### First create and push the tag (execute only if the tag does not exist)
-      - name: Create And Push Tag
+      - name: Create & Push Tag
         run: |
-          TAG="${{ steps.release_info.outputs.ver_name }}"
-          git config --global user.email "actions@github.com"
-          git config --global user.name "GitHub Actions"
-          git tag -a $TAG -m "${{ steps.release_info.outputs.title }}"
-          git push origin $TAG
-          echo "Created and pushed tag: $TAG"
-          
-          ### Refresh local tag information to ensure subsequent steps can see the newly created tag
-          git fetch --tags
+          TAG="${{ steps.info.outputs.ver_name }}"
+          TITLE=$(grep '^TITLE=' RELEASE_INFO | cut -d'=' -f2- | sed 's/shortSHA/'${GITHUB_SHA::7}'/;s/^[[:space:]]*//;s/[[:space:]]*$//' || true)
+          [ -z "$TITLE" ] && TITLE="$TAG ${GITHUB_SHA::7}"
+          git config user.name  "github-actions"
+          git config user.email "actions@github.com"
+          git tag -a "$TAG" -m "$TITLE"
+          git push origin "$TAG"
 
-      ### The following steps include conditional checks and will only execute if the tag does not exist
-      - name: Set Up JDK
-        uses: actions/setup-java@v4
+  # ---------- 2. Build all ABIs ----------
+  build_all_abi:
+    needs: create_tag
+    strategy:
+      fail-fast: false
+      matrix:
+        #abi_type: ['arm64-v8a', 'armeabi-v7a', 'x86_64']
+        abi_type: ['arm64-v8a']
+    uses: ./.github/workflows/_build-apk-reusable.yml
+    with:
+      build_type: release
+      abi_type:   ${{ matrix.abi_type }}
+
+  # ---------- 3. Get all artifacts and create gitHub release ----------
+  publish_release:
+    needs: [create_tag, build_all_abi]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
         with:
-          java-version: ${{ env.BUILD_JAVA_VERSION }}
-          distribution: ${{ env.BUILD_JAVA_DIST }}
-          cache: 'gradle'
+          fetch-depth: 1
 
-      - name: Make Gradlew Executable
-        run: chmod +x ./gradlew
-
-      - name: Restore Gradle Cache
-        uses: actions/cache@v4
+      - name: Download All ABI Artifacts
+        uses: actions/download-artifact@v4
         with:
-          path: |
-            ~/.gradle/caches
-            ~/.gradle/wrapper
-          key: ${{ runner.os }}-gradle-${{ hashFiles('**/*.gradle*', '**/gradle-wrapper.properties') }}
-          restore-keys: |
-            ${{ runner.os }}-gradle-
+          # The same in _build-apk-reusable.yml
+          pattern: AndroIDE*-release
+          merge-multiple: true
+          path: release_assets/
 
-#      - name: Run Code Quality Checks
-#        if: ${{ steps.check_tag.outputs.tag_exists == 'false' }}
-#        run: ./gradlew lintRelease
-#        continue-on-error: true
-#
-#      - name: Run tests
-#        if: ${{ steps.check_tag.outputs.tag_exists == 'false' }}
-#        run: ./gradlew testReleaseUnitTest
-#        continue-on-error: true
-
-      - name: Build Release APK
+      - name: Read Release Notes
+        id: notes
         run: |
-          ./gradlew :core:app:assembleRelease \
-            -PversionSuffix="${{ steps.release_info.outputs.ver_suffix }}" \
-            -PbaseVersion="${{ steps.release_info.outputs.ver_name }}"
+          NOTES=$(awk 'BEGIN{f=0} /^NOTES=/{f=1; sub(/^NOTES=/,""); print; next} f' RELEASE_INFO)
+          echo "notes<<EOF" >> $GITHUB_OUTPUT
+          echo "$NOTES"     >> $GITHUB_OUTPUT
+          echo "EOF"        >> $GITHUB_OUTPUT
 
-      - name: Show APK Path
+      - name: Extract Prerelease Flag
+        id: flag
         run: |
-            echo ">>>APK path and subdirectories:"
-            ls -laR ${{ env.APK_OUTPUT_PATH }}
-
-      - name: Prepare Artifacts-APK
-        run: |
-          mkdir -p ${{ env.ARTIFACT_DIR }}
-          cp ${{ env.APK_OUTPUT_PATH }}/${{ env.DEFAULT_OUTPUT_FILE1 }}.apk ${{ env.ARTIFACT_DIR }}/${{ env.RENAME_OUTPUT_FILE2 }}_${{ steps.set_sha.outputs.short_sha }}.apk
-
-      - name: Prepare Artifacts-SHA256
-        run: |
-          sha256sum ${{ env.ARTIFACT_DIR }}/${{ env.RENAME_OUTPUT_FILE2 }}_${{ steps.set_sha.outputs.short_sha }}.apk > ${{ env.ARTIFACT_DIR }}/${{ env.RENAME_OUTPUT_FILE2 }}_${{ steps.set_sha.outputs.short_sha }}.apk.sha256
-          ls -laR ${{ env.ARTIFACT_DIR }}
+          PRERELEASE=$(grep '^PRERELEASE=' RELEASE_INFO | cut -d'=' -f2- | tr -d '[:space:]' || true)
+          [ -z "$PRERELEASE" ] && PRERELEASE="true"
+          echo "prerelease=$PRERELEASE" >> $GITHUB_OUTPUT
 
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v1
         with:
-          tag_name: "${{ steps.release_info.outputs.ver_name }}"
-          name: ${{ steps.release_info.outputs.title }}
-          body: ${{ steps.release_info.outputs.notes }}
-          files: ${{ env.ARTIFACT_DIR }}/*
-          ### Whether to save as a draft instead of publishing directly
-          draft: false
-          ### Whether to mark as a prerelease version
-          prerelease: ${{ steps.release_info.outputs.prerelease }}
-          ### Only set non-prerelease versions as "latest"
-          make_latest: ${{ steps.release_info.outputs.prerelease == 'false' }}
+          tag_name: ${{ needs.create_tag.outputs.ver_name }}
+          name:     ${{ needs.create_tag.outputs.ver_name }}
+          body:     ${{ steps.notes.outputs.notes }}
+          files:    release_assets/*
+          draft:    false
+          prerelease: ${{ steps.flag.outputs.prerelease == 'true' }}
+          make_latest: ${{ steps.flag.outputs.prerelease != 'true' }}
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
