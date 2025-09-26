@@ -1,52 +1,92 @@
-# Release Tag
-# (Required)
-VER_NAME=v2.7.1-beta1test2
 
-# Suffix For Version Name 
-# (Only available for informal releases. Optional, no suffix added by default)
-#VER_SUFFIX=
+## ===================================================================
+## 	 AndroIDE Configuration For Build & Release
+## 	 This file is parsed by CI. Any change triggers the release flow.
+## ===================================================================
 
-# Release Title
-# (Only available for official releases. Optional, default value is "VER_NAME shortSHA")
-#TITLE=v2.7.1-beta1 shortSHA
 
-# Target Branch
-# (Only available for official releases. Required)
-BRANCH=dev
 
-# Whether It Is A Pre-release Version
-# (Only available for official releases. Optional, default value is "false")
-PRERELEASE=true
+## ---------------------------------------------------------------------------
+## [Optional] [Not for release]
+## ---------------------------------------------------------------------------
+## Suffix for version name (default "-dev")
+## ---------------------------------------------------------------------------
+#VER_SUFFIX=-dev
 
-# Release Notes
-# (Only available for official releases. Required, starts from "NOTES=" to the end of the file, Markdown format supported)
-# !!!This is the last property
 
+## ---------------------------------------------------------------------------
+## [Optional] [Only for release]
+## ---------------------------------------------------------------------------
+## Release title (default "VER_NAME shortSHA")
+## ---------------------------------------------------------------------------
+#TITLE=v2.7.1-beta2 shortSHA
+
+
+## ---------------------------------------------------------------------------
+## [Optional] [Only for release]
+## ---------------------------------------------------------------------------
+## Pre-release flag (false=stable & latest, true=beta/gray) (default true)
+## ---------------------------------------------------------------------------
+#PRERELEASE=true
+
+
+## ---------------------------------------------------------------------------
+## [Required] [For all]
+## ---------------------------------------------------------------------------
+## Release tag (semantic version with leading 'v')
+## ---------------------------------------------------------------------------
+VER_NAME=v2.7.1-beta2
+
+
+## ---------------------------------------------------------------------------
+## [Required] [Only for release]
+## ---------------------------------------------------------------------------
+## Target branch
+## ---------------------------------------------------------------------------
+BRANCH=main
+
+
+## ---------------------------------------------------------------------------
+## [Required] [Only for release]
+## ---------------------------------------------------------------------------
+## Release notes (markdown supported, starts after "NOTES=" till end-of-file)
+## ---------------------------------------------------------------------------
+## !!! This is the last param.
+## ---------------------------------------------------------------------------
 NOTES=
-# What's Changed:
-- 8.修复了“断开日志发送器”经常无法点击的问题(如果还是无法点击或者logsender页面不再输出日志，需重启IDE，这不是漏洞)
-   - Fixed the issue where the "Disconnect log senders" option was often unclickable. (If it is still unclickable or the "App log" page stops outputting logs, please restart the IDE. This is not a bug.)
 
-- 7.修复了一个出现概率非常高的引起崩溃的漏洞 [#13](https://github.com/kkgit2008/AndroIDE/discussions/13)
-   - Fixed a high-probability crash bug [#13](https://github.com/kkgit2008/AndroIDE/discussions/13)
+<!-- 折叠提示：点击展开详细变更 -->
+<details>
+<summary><b>🇨🇳 中文版变更日志（点击展开）</b></summary>
 
-- 6.点击下面的视频查看具体操作:
-   - See more below (Dare you click the button before this release):
+- 修复「断开日志发送器」经常无法点击的问题（若仍无效请重启 IDE，非 bug）
+- 修复高概率崩溃 bug [#13](https://github.com/kkgit2008/AndroIDE/discussions/13)  
+- 视频演示：操作步骤见下方 ⬇️  
+  https://github.com/user-attachments/assets/c8b54c68-3f0f-4629-9b6b-d902e2592169
+- 动作菜单全部显示并重新排序，避免误触
+- 修复 DesignerTextureView 引发的崩溃 [#5](https://github.com/kkgit2008/AndroIDE/discussions/5)
+- 补全主界面英文翻译，优化文案
+- 新增「退出软件」按钮
+- 首次安装可跳过强制授权：连续点击三次「下一步」即可
 
-https://github.com/user-attachments/assets/c8b54c68-3f0f-4629-9b6b-d902e2592169
+</details>
 
-- 5.显示所有动作菜单并重新排序，动作菜单不会再跳来跳去导致误点
-   - All action menus are now displayed and will no longer jump around, preventing accidental clicks
+<details>
+<summary><b>🌏 English Changelog (Click to expand)</b></summary>
 
-- 4.修复了一个引起程序崩溃的漏洞 (来自 DesignerTextureView) [#5](https://github.com/kkgit2008/AndroIDE/discussions/5)
-   - Fixed a crash bug (from DesignerTextureView) [#5](https://github.com/kkgit2008/AndroIDE/discussions/5)
+- Fixed "Disconnect log senders" often unclickable (restart IDE if still failing; not a bug)
+- Fixed high-probability crash [#13](https://github.com/kkgit2008/AndroIDE/discussions/13)
+- Video demo: see link above ⬆️
+- All action menus are now stable & re-ordered to prevent mis-clicks
+- Fixed crash from DesignerTextureView [#5](https://github.com/kkgit2008/AndroIDE/discussions/5)
+- Completed CN→EN translations and polished strings
+- Added "Exit App" button
+- First-time setup: skip mandatory permissions by tapping "Next" 3×
 
-- 3.修正了主界面部分英文未翻译的问题。优化部分文字描述。
-   - About Chinese translation
+</details>
 
-- 2.添加了退出软件的按钮
-   - Added an exit button for the app
-
-- 1.首次安装时可跳过强制授权，只需点击三次 “下一步”
-   - Can skip mandatory permissions during first installation by clicking the "Next" button three times
-
+<!-- These Issue/PR will be closed -->
+#<!--
+Fixed #13
+Fixed #5
+#-->
