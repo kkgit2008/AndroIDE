@@ -28,7 +28,7 @@
 
 # CHANGELOG
 
-- [All changelogs](./RELEASE_INFO)
+- [All changelogs](https://github.com/kkgit2008/AndroIDE/releases/latest)
 
 
 <p> </p>
