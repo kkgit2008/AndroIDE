@@ -25,7 +25,7 @@
 ## ---------------------------------------------------------------------------
 ## [Optional] [Only for release]
 ## ---------------------------------------------------------------------------
-## Pre-release flag (false=stable & latest, true=beta/gray) (default true)
+## Pre-release flag (false=stable & latest, true=beta/gray) (default "true")
 ## ---------------------------------------------------------------------------
 #PRERELEASE=true
 
@@ -35,7 +35,7 @@
 ## ---------------------------------------------------------------------------
 ## Release tag (semantic version with leading 'v')
 ## ---------------------------------------------------------------------------
-VER_NAME=v2.7.1-beta2 test4
+VER_NAME=v2.7.1-beta2
 
 
 ## ---------------------------------------------------------------------------
@@ -43,8 +43,7 @@ VER_NAME=v2.7.1-beta2 test4
 ## ---------------------------------------------------------------------------
 ## Target branch
 ## ---------------------------------------------------------------------------
-#BRANCH=main
-BRANCH=kkgit2008-patch-1
+BRANCH=main
 
 
 ## ---------------------------------------------------------------------------
@@ -78,16 +77,14 @@ NOTES=
 - Fixed "Disconnect log senders" often unclickable (restart IDE if still failing; not a bug)
 - Fixed high-probability crash [#13](https://github.com/kkgit2008/AndroIDE/discussions/13)
 - Video demo: see link above ⬆️
-- All action menus are now stable & re-ordered to prevent mis-clicks
+- All action menus are now visible & re-ordered to prevent mis-clicks
 - Fixed crash from DesignerTextureView [#5](https://github.com/kkgit2008/AndroIDE/discussions/5)
-- Completed CN→EN translations and polished strings
+- Completed EN→CN translations and polished strings
 - Added "Exit App" button
-- First-time setup: skip mandatory permissions by tapping "Next" 3×
+- First-time setup: skip mandatory permissions by tapping "Next" 3 times
 
 </details>
 
 <!-- These Issue/PR will be closed -->
-#<!--
 Fixed #13
 Fixed #5
-#-->
