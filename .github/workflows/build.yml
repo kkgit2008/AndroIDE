@@ -1,137 +1,27 @@
 name: Build APK
 
 on:
-#  push:
-#    branches: [ "master", "main" ]
-#    paths-ignore:
-#      - '**.md'
-#      - 'RELEASE_INFO'
-#      - 'fastlane/**'
-#      - '.github/workflows/*.yml'
-  ### Can trigger manually
-  workflow_dispatch: { }
-
-env:
-
-  ### Output configuration
-  DefaultAPK_Output_Path: 'core/app/build/outputs/apk'
-  Artifact_Output_Path: 'artifact_output'
-  INFO_FILE: 'RELEASE_INFO'
-
-  ### Build configuration
-  BUILD_JAVA_VERSION: '17'
-  BUILD_JAVA_DIST: 'adopt'
-  ReleaseAndroIDE: true
-
-  ### Misc
-  GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+  push:
+    #branches: [ "master", "main" ]
+    paths-ignore:
+      - '**.md'
+      - 'RELEASE_INFO'
+      - 'fastlane/**'
+      - '.github/workflows/*.yml'
+  workflow_dispatch: {}
 
 jobs:
-  build_apk:
+  build_matrix:
     strategy:
+      fail-fast: false
       matrix:
         abi_type: ['arm64-v8a']
-        # abi_type: ['arm64-v8a', 'armeabi-v7a', 'x86_64']
-        # build_type: ['release']
-        build_type: ['debug', 'release']
-    name: Build APK
-    runs-on: ubuntu-latest
-    steps:
-
-      - name: Cancel Previous Runs
-        uses: styfle/cancel-workflow-action@0.12.1
-        with:
-          access_token: ${{ github.token }}
-
-      - name: Checkout Code
-        uses: actions/checkout@v4
-        with:
-          submodules: 'recursive'
-          fetch-depth: 0
-
-      - name: Set Short SHA
-        id: set_sha
-        run: echo "short_sha=${GITHUB_SHA::7}" >> $GITHUB_OUTPUT
-
-
-      - name: Read And Process Release Information
-        id: release_info
-        run: |
-          ### Check if ${{ env.INFO_FILE }} file exists
-          if [ ! -f "${{ env.INFO_FILE }}" ]; then
-            echo "${{ env.INFO_FILE }} file not found!"
-            exit 1
-          fi
-
-          ### Extract version name
-          VER_NAME=$(grep '^VER_NAME=' ${{ env.INFO_FILE }} | cut -d'=' -f2- | tr -d '[:space:]')
-          if [ -z "$VER_NAME" ]; then
-            echo "VER_NAME not specified in ${{ env.INFO_FILE }}"
-            exit 1
-          fi
-
-          ### Extract version name suffix
-          VER_SUFFIX=$(grep '^VER_SUFFIX=' ${{ env.INFO_FILE }} | cut -d'=' -f2- | tr -d '[:space:]')
-          if [ -z "$VER_SUFFIX" ]; then
-            echo "VER_SUFFIX not specified in ${{ env.INFO_FILE }}"
-            exit 1
-          fi
-
-          ### Output to GitHub environment variables
-          echo "ver_name=$VER_NAME" >> $GITHUB_OUTPUT
-          echo "ver_suffix=$VER_SUFFIX" >> $GITHUB_OUTPUT
-
-          ### Display the read information
-          echo "Tag_name: $VER_NAME"
-          echo "Ver_suffix: $VER_SUFFIX"
-
-
-      - name: Set Up JDK
-        uses: actions/setup-java@v4
-        with:
-          java-version: ${{ env.BUILD_JAVA_VERSION }}
-          distribution: ${{ env.BUILD_JAVA_DIST }}
-
-      - name: Make Gradle Wrapper Executable
-        run: chmod +x ./gradlew
-
-      - name: Restore Cache
-        uses: actions/cache@v4
-        with:
-          path: |
-            ~/.gradle/caches
-            ~/.gradle/wrapper
-          key: ${{ runner.os }}-gradle-${{ hashFiles('**/*.gradle*') }}
-          restore-keys: |
-            ${{ runner.os }}-gradle-
-
-      - name: Build ${{ matrix.build_type }} APK
-        run: |
-          build_type=${{ matrix.build_type }}
-          ./gradlew :core:app:assemble${build_type^} \
-            -PversionSuffix="${{ steps.release_info.outputs.ver_suffix }}" \
-            -PbaseVersion="${{ steps.release_info.outputs.ver_name }}"
-
-      - name: Copy APK And Show Output Path
-        run: |
-          echo ">>DefaultAPK_Output_Path and sub:"
-          ls -laR ${{ env.DefaultAPK_Output_Path }}
-          mkdir -p ${{ env.Artifact_Output_Path }}
-          cp -r ${{ env.DefaultAPK_Output_Path }}/${{ matrix.build_type }}/app-${{ matrix.abi_type }}-${{ matrix.build_type }}.apk ${{ env.Artifact_Output_Path }}/AndroIDE_${{ matrix.abi_type }}_${{ matrix.build_type }}.apk
-          echo ">>Artifact_Output_Path and sub:"
-          ls -laR ${{ env.Artifact_Output_Path }}
-      
-      - name: Upload ${{ matrix.abi_type }} ${{ matrix.build_type }} APK
-        uses: actions/upload-artifact@v4
-        with:
-          name: AndroIDE_${{ matrix.abi_type }}_${{ matrix.build_type }}_${{ steps.set_sha.outputs.short_sha }}
-          path: |
-            ${{ env.Artifact_Output_Path }}/AndroIDE_${{ matrix.abi_type }}_${{ matrix.build_type }}.apk
-
-      - name: Upload ${{ matrix.build_type }} Mappings
-        if: ${{ always() && matrix.build_type == 'release' }}
-        uses: actions/upload-artifact@v4
-        with:
-          name: release-mappings-${{ steps.set_sha.outputs.short_sha }}
-          path: '**/build/outputs/mapping'
+        #abi_type: ['arm64-v8a', 'armeabi-v7a', 'x86_64']
+        build_type: ['release']
+        #build_type: ['release', 'debug']
+    uses: ./.github/workflows/_build-apk-reusable.yml
+    with:
+      build_type: ${{ matrix.build_type }}
+      abi_type:   ${{ matrix.abi_type }}
+      # Other params read by _build-apk-reusable.yml
 
