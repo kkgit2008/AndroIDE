@@ -193,6 +193,9 @@ class LocaleSelector(
     GeneralPreferences.selectedLocale = entry?.data?.let { localeKey ->
       if (localeKey is Int) null else localeKey as String
     }
+    // =====  Set Aliyun Maven Mirror =====
+    GeneralPreferences.useAliyunMirror =
+        GeneralPreferences.selectedLocale?.startsWith("zh") == true
   }
 }
 
