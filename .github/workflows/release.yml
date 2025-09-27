@@ -71,8 +71,8 @@ jobs:
         abi_type: ['arm64-v8a']
     uses: ./.github/workflows/_build-apk-reusable.yml
     with:
-      build_type: release
       abi_type:   ${{ matrix.abi_type }}
+      build_type: release
       override_IsPublish: true
 
   # ---------- 3. Get all artifacts and create gitHub release ----------
