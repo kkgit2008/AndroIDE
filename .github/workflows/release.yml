@@ -73,6 +73,7 @@ jobs:
     with:
       build_type: release
       abi_type:   ${{ matrix.abi_type }}
+      override_IsPublish: true
 
   # ---------- 3. Get all artifacts and create gitHub release ----------
   publish_release:
