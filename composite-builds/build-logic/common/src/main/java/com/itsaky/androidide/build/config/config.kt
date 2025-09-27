@@ -33,4 +33,16 @@ const val KEY_BIN = "IDE_SIGNING_KEY_BIN"
 const val AGP_VERSION_MINIMUM = "7.2.0"
 
 val Project.signingKey: Provider<RegularFile>
-  get() = rootProject.layout.buildDirectory.file("signing-key.jks")
+  get() {
+    val defaultPath1 = rootProject.layout.buildDirectory.file("../../signing-key.jks")
+    val defaultPath2 = rootProject.layout.buildDirectory.file("../signing-key.jks")
+    val defaultPath3 = rootProject.layout.buildDirectory.file("signing-key.jks")
+
+    return if (defaultPath3.get().asFile.exists()) {
+      defaultPath3
+    } else if (defaultPath2.get().asFile.exists()) {
+      defaultPath2
+    } else {
+      defaultPath1
+    }
+  }
