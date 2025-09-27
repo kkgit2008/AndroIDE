@@ -14,12 +14,13 @@ on:
   workflow_call:
   
     inputs:
-      build_type:
-        description: 'debug or release'
-        required: true
-        type: string
+    
       abi_type:
         description: 'e.g. arm64-v8a'
+        required: true
+        type: string
+      build_type:
+        description: 'debug or release'
         required: true
         type: string
       
@@ -62,7 +63,7 @@ env:
 
 jobs:
   build:
-    name: Build ${{ inputs.abi_type }} ${{ inputs.build_type }} APK
+    name: Build(${{ inputs.abi_type }},${{ inputs.build_type }})APK
     runs-on: ubuntu-latest
     outputs:
       ver_name:  ${{ steps.info.outputs.ver_name }}
