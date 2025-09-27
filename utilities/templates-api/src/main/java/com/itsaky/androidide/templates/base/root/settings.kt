@@ -18,10 +18,10 @@
 package com.itsaky.androidide.templates.base.root
 
 import com.itsaky.androidide.templates.base.ProjectTemplateBuilder
-import com.itsaky.androidide.preferences.internal.GeneralPreferences
 
-internal fun ProjectTemplateBuilder.settingsGradleSrcStr(): String {
-    val useAliyunMirror = GeneralPreferences.useAliyunMirror
+internal fun ProjectTemplateBuilder.settingsGradleSrcStr(
+    useAliyunMirror: Boolean = false
+): String {
 
     val pluginRepos = if (useAliyunMirror) """
         maven { url = uri("https://maven.aliyun.com/repository/gradle-plugin") }
@@ -55,6 +55,6 @@ dependencyResolutionManagement {
 
 rootProject.name = "${data.name}"
 
-${modules.joinToString(separator = "\n") { "include(":${it.name}")" }}
+${modules.joinToString(separator = "\n") { "include(\":${it.name}\")" }}
     """.trimIndent()
 }
