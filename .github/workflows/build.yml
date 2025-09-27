@@ -26,7 +26,7 @@ jobs:
         #build_type: ['release', 'debug']
     uses: ./.github/workflows/_build-apk-reusable.yml
     with:
-      build_type: ${{ matrix.build_type }}
       abi_type:   ${{ matrix.abi_type }}
-      # Other params read by _build-apk-reusable.yml
+      build_type: ${{ matrix.build_type }}
+      # Params read by _build-apk-reusable.yml
 
