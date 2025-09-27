@@ -83,7 +83,7 @@ jobs:
 
       - name: Set Short SHA
         id: sha
-        run: echo "short_sha=${GITHUB_SHA::6}" >> $GITHUB_OUTPUT
+        run: echo "short_sha=${GITHUB_SHA::7}" >> $GITHUB_OUTPUT
 
       - name: Read & Parse RELEASE_INFO
         id: info
@@ -106,9 +106,9 @@ jobs:
           
           if [ "${{ inputs.override_IsPublish }}" == "true" ]; then
             VER_SUFFIX=""
-          else if [ "${{ inputs.build_type }}" == "release" ]; then
+          elif [ "${{ inputs.build_type }}" == "release" ]; then
             VER_SUFFIX=-dev-"${{ steps.sha.outputs.short_sha }}"
-          else if [ "${{ inputs.build_type }}" == "debug" ]; then
+          elif [ "${{ inputs.build_type }}" == "debug" ]; then
             VER_SUFFIX=-devDebug-"${{ steps.sha.outputs.short_sha }}"
           fi
           
@@ -125,10 +125,10 @@ jobs:
             [ -z "$PRERELEASE" ] && PRERELEASE="true"
             
             BRANCH=$(grep '^BRANCH=' "$TEMP" | cut -d'=' -f2- | tr -d '[:space:]' || true)
-            [ -z "$BRANCH" ] && { echo "BRANCH missing"; exit 1; }
+            [ -z "$BRANCH" ] && { echo "BRANCH missing or empty"; exit 1; }
 
             NOTES=$(awk 'BEGIN{f=0} /^NOTES=/{f=1; sub(/^NOTES=/,""); print; next} f' "$TEMP" || true)
-            [ -z "$NOTES" ] && { echo "NOTES missing"; exit 1; }
+            [ -z "$NOTES" ] && { echo "NOTES missing or empty"; exit 1; }
 
             # Set Params
             echo "title=$TITLE"      >> $GITHUB_OUTPUT
@@ -208,7 +208,7 @@ jobs:
           path: ${{ env.ARTIFACT_OUTPUT_DIR }}${{ inputs.abi_type }}/*
 
       - name: Upload Mapping (release only, not debug)
-        if: "${{ inputs.build_type }}" == "release"
+        if: "${{ inputs.build_type == 'release' }}
         uses: actions/upload-artifact@v4
         with:
           name: release-mappings-${{ steps.sha.outputs.short_sha }}
