@@ -25,7 +25,7 @@ jobs:
       - name: Parse RELEASE_INFO
         id: info
         run: |
-          set -euo pipefail
+          set -euxo pipefail
           INFO_FILE=RELEASE_INFO
           if [ ! -s "$INFO_FILE" ]; then
             echo "$INFO_FILE not found or empty"
