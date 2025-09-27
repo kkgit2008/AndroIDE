@@ -19,6 +19,7 @@ package com.itsaky.androidide.preferences.internal
 
 import androidx.appcompat.app.AppCompatDelegate
 import com.itsaky.androidide.resources.localization.LocaleProvider
+import java.util.Locale
 
 /**
  * @author Akash Yadav
