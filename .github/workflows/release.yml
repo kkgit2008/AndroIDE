@@ -89,7 +89,7 @@ jobs:
         uses: actions/download-artifact@v4
         with:
           # The same in _build-apk-reusable.yml
-          pattern: AndroIDE*-release
+          pattern: AndroIDE*
           merge-multiple: true
           path: release_assets/
 
