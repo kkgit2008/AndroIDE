@@ -3,8 +3,7 @@
 #  Reusable : Can build all ABI/build-type and upload APK + mapping
 #  Read file RELEASE_INFO and get params：
 #    - VER_NAME          （Required）
-#    - VER_SUFFIX        （Optional，default to '-dev'）
-#    - TITLE / BRANCH / PRERELEASE / NOTES  (Only read when release)
+#    - TITLE / BRANCH / PRERELEASE / NOTES  (Only read when publish)
 # ===================================================================
 
 
@@ -29,22 +28,23 @@ on:
         default: 'RELEASE_INFO'
         type: string
       
-      # Optional parameters
+      # Optional input parameters
       
+      override_IsPublish:
+        description: 'whether is publishing'
+        required: false
+        default: "false"
+        type: string
       override_ver_name:
         description: 'force use this ver_name'
         required: false
         type: string
-      override_ver_suffix:
-        description: 'force use this ver_suffix'
-        required: false
-        type: string
       override_title:
-        description: 'force use this title (release only)'
+        description: 'force use this title (Publish only)'
         required: false
         type: string
       override_prerelease:
-        description: 'force use this prerelease flag (release only)'
+        description: 'force use this prerelease flag (Publish only)'
         required: false
         type: string
 
@@ -52,20 +52,17 @@ on:
       ver_name:
         description: 'parsed or overridden VER_NAME'
         value: ${{ jobs.build.outputs.ver_name }}
-      ver_suffix:
-        description: 'parsed or overridden VER_SUFFIX'
-        value: ${{ jobs.build.outputs.ver_suffix }}
       short_sha:
         description: 'short SHA of the run'
         value: ${{ jobs.build.outputs.short_sha }}
       title:
-        description: 'parsed or overridden TITLE (release only)'
+        description: 'parsed or overridden TITLE (Publish only)'
         value: ${{ jobs.build.outputs.title }}
       branch:
         description: 'parsed BRANCH (release only)'
         value: ${{ jobs.build.outputs.branch }}
       prerelease:
-        description: 'parsed or overridden PRERELEASE (release only)'
+        description: 'parsed or overridden PRERELEASE (Publish only)'
         value: ${{ jobs.build.outputs.prerelease }}
       notes:
         description: 'parsed NOTES (release only)'
@@ -81,7 +78,6 @@ jobs:
     runs-on: ubuntu-latest
     outputs:
       ver_name:  ${{ steps.info.outputs.ver_name }}
-      ver_suffix: ${{ steps.info.outputs.ver_suffix }}
       short_sha:  ${{ steps.sha.outputs.short_sha }}
       title:      ${{ steps.info.outputs.title }}
       branch:     ${{ steps.info.outputs.branch }}
@@ -122,19 +118,16 @@ jobs:
           VER_NAME=$(grep '^VER_NAME=' "$TEMP" | cut -d'=' -f2- | tr -d '[:space:]' || true)
           [ -z "$VER_NAME" ] && { echo "VER_NAME missing"; exit 1; }
           
+          VER_SUFFIX="${{ steps.sha.outputs.short_sha }}"
+          
           # Overwrite by input param
           if [ -n "${{ inputs.override_ver_name }}" ]; then
             VER_NAME="${{ inputs.override_ver_name }}"
           fi
 
-          VER_SUFFIX=$(grep '^VER_SUFFIX=' "$TEMP" | cut -d'=' -f2- | tr -d '[:space:]' || true)
-          [ -z "$VER_SUFFIX" ] && VER_SUFFIX="-dev"
-          if [ -n "${{ inputs.override_ver_suffix }}" ]; then
-            VER_SUFFIX="${{ inputs.override_ver_suffix }}"
-          fi
-
-          # --------------- release Only ---------------
-          if [ "${{ inputs.build_type }}" == "release" ]; then
+          # --------------- Publish Only ---------------
+          if [ "${{ inputs.override_IsPublish }}" == "true" ]; then
+            VER_SUFFIX=""
             TITLE=$(grep '^TITLE=' "$TEMP" | cut -d'=' -f2- | sed 's/^[[:space:]]*//;s/[[:space:]]*$//' || true)
             [ -z "$TITLE" ] && TITLE="${VER_NAME} ${{ steps.sha.outputs.short_sha }}"
             [ -n "${{ inputs.override_title }}" ] && TITLE="${{ inputs.override_title }}"
@@ -167,7 +160,7 @@ jobs:
           echo ">>>> RELEASE_INFO parsed:"
           echo "  ver_name : $VER_NAME"
           echo "  ver_suffix: $VER_SUFFIX"
-          if [ "${{ inputs.build_type }}" == "release" ]; then
+          if [ "${{ inputs.override_IsPublish }}" == "true" ]; then
             echo "  title    : $TITLE"
             echo "  branch   : $BRANCH"
             echo "  prerelease: $PRERELEASE"
@@ -226,7 +219,7 @@ jobs:
           name: AndroIDE${{ steps.info.outputs.ver_suffix }}-${{ inputs.abi_type }}-${{ inputs.build_type }}
           path: ${{ env.ARTIFACT_OUTPUT_DIR }}${{ inputs.abi_type }}/*
 
-      - name: Upload Mapping (release only)
+      - name: Upload Mapping (release only, not debug)
         if: ${{ inputs.build_type == 'release' }}
         uses: actions/upload-artifact@v4
         with:
