@@ -22,30 +22,18 @@ on:
         description: 'e.g. arm64-v8a'
         required: true
         type: string
-      info_file:
+      
+      # Optional input parameters
+      
+      override_info_file:
         description: 'path to RELEASE_INFO (repo root relative)'
         required: false
         default: 'RELEASE_INFO'
         type: string
-      
-      # Optional input parameters
-      
       override_IsPublish:
         description: 'whether is publishing'
         required: false
         default: "false"
-        type: string
-      override_ver_name:
-        description: 'force use this ver_name'
-        required: false
-        type: string
-      override_title:
-        description: 'force use this title (Publish only)'
-        required: false
-        type: string
-      override_prerelease:
-        description: 'force use this prerelease flag (Publish only)'
-        required: false
         type: string
 
     outputs:
@@ -95,14 +83,14 @@ jobs:
 
       - name: Set Short SHA
         id: sha
-        run: echo "short_sha=${GITHUB_SHA::7}" >> $GITHUB_OUTPUT
+        run: echo "short_sha=${GITHUB_SHA::6}" >> $GITHUB_OUTPUT
 
       - name: Read & Parse RELEASE_INFO
         id: info
         shell: bash
         run: |
-          set -euo pipefail
-          INFO_FILE="${{ inputs.info_file }}"
+          set -euxo pipefail
+          INFO_FILE="${{ inputs.override_info_file }}"
 
           # Exit When File Not Exists Or Is Empty
           if [ ! -s "$INFO_FILE" ]; then
@@ -115,29 +103,29 @@ jobs:
           sed "s/shortSHA/${{ steps.sha.outputs.short_sha }}/g" "$INFO_FILE" > "$TEMP"
 
           # --------------- Common ---------------
+          
+          if [ "${{ inputs.override_IsPublish }}" == "true" ]; then
+            VER_SUFFIX=""
+          else if [ "${{ inputs.build_type }}" == "release" ]; then
+            VER_SUFFIX=-dev-"${{ steps.sha.outputs.short_sha }}"
+          else if [ "${{ inputs.build_type }}" == "debug" ]; then
+            VER_SUFFIX=-devDebug-"${{ steps.sha.outputs.short_sha }}"
+          fi
+          
           VER_NAME=$(grep '^VER_NAME=' "$TEMP" | cut -d'=' -f2- | tr -d '[:space:]' || true)
           [ -z "$VER_NAME" ] && { echo "VER_NAME missing"; exit 1; }
-          
-          VER_SUFFIX="${{ steps.sha.outputs.short_sha }}"
-          
-          # Overwrite by input param
-          if [ -n "${{ inputs.override_ver_name }}" ]; then
-            VER_NAME="${{ inputs.override_ver_name }}"
-          fi
+
 
           # --------------- Publish Only ---------------
           if [ "${{ inputs.override_IsPublish }}" == "true" ]; then
-            VER_SUFFIX=""
             TITLE=$(grep '^TITLE=' "$TEMP" | cut -d'=' -f2- | sed 's/^[[:space:]]*//;s/[[:space:]]*$//' || true)
             [ -z "$TITLE" ] && TITLE="${VER_NAME} ${{ steps.sha.outputs.short_sha }}"
-            [ -n "${{ inputs.override_title }}" ] && TITLE="${{ inputs.override_title }}"
-
-            BRANCH=$(grep '^BRANCH=' "$TEMP" | cut -d'=' -f2- | tr -d '[:space:]' || true)
-            [ -z "$BRANCH" ] && { echo "BRANCH missing"; exit 1; }
 
             PRERELEASE=$(grep '^PRERELEASE=' "$TEMP" | cut -d'=' -f2- | tr -d '[:space:]' || true)
             [ -z "$PRERELEASE" ] && PRERELEASE="true"
-            [ -n "${{ inputs.override_prerelease }}" ] && PRERELEASE="${{ inputs.override_prerelease }}"
+            
+            BRANCH=$(grep '^BRANCH=' "$TEMP" | cut -d'=' -f2- | tr -d '[:space:]' || true)
+            [ -z "$BRANCH" ] && { echo "BRANCH missing"; exit 1; }
 
             NOTES=$(awk 'BEGIN{f=0} /^NOTES=/{f=1; sub(/^NOTES=/,""); print; next} f' "$TEMP" || true)
             [ -z "$NOTES" ] && { echo "NOTES missing"; exit 1; }
@@ -156,7 +144,7 @@ jobs:
           echo "ver_name=$VER_NAME"     >> $GITHUB_OUTPUT
           echo "ver_suffix=$VER_SUFFIX" >> $GITHUB_OUTPUT
 
-          # ---------- Print Params For Debugging ----------
+          # ---------- Print Params ----------
           echo ">>>> RELEASE_INFO parsed:"
           echo "  ver_name : $VER_NAME"
           echo "  ver_suffix: $VER_SUFFIX"
@@ -205,7 +193,7 @@ jobs:
         run: |
           mkdir -p ${{ env.ARTIFACT_OUTPUT_DIR }}${{ inputs.abi_type }}
           SRC=${{ env.APK_OUTPUT_DIR }}${{ inputs.build_type }}/app-${{ inputs.abi_type }}-${{ inputs.build_type }}.apk
-          DST=${{ env.ARTIFACT_OUTPUT_DIR }}${{ inputs.abi_type }}/AndroIDE${{ steps.info.outputs.ver_suffix }}-${{ inputs.abi_type }}-${{ inputs.build_type }}.apk
+          DST=${{ env.ARTIFACT_OUTPUT_DIR }}${{ inputs.abi_type }}/AndroIDE-${{ inputs.abi_type }}${{ steps.info.outputs.ver_suffix }}.apk
           cp "$SRC" "$DST"
           sha256sum "$DST" > "$DST.sha256"
 
@@ -216,11 +204,11 @@ jobs:
       - name: Upload APK Artifact
         uses: actions/upload-artifact@v4
         with:
-          name: AndroIDE${{ steps.info.outputs.ver_suffix }}-${{ inputs.abi_type }}-${{ inputs.build_type }}
+          name: AndroIDE-${{ inputs.abi_type }}${{ steps.info.outputs.ver_suffix }}
           path: ${{ env.ARTIFACT_OUTPUT_DIR }}${{ inputs.abi_type }}/*
 
       - name: Upload Mapping (release only, not debug)
-        if: ${{ inputs.build_type == 'release' }}
+        if: "${{ inputs.build_type }}" == "release"
         uses: actions/upload-artifact@v4
         with:
           name: release-mappings-${{ steps.sha.outputs.short_sha }}
