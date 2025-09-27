@@ -68,7 +68,6 @@ import org.slf4j.LoggerFactory
 import java.lang.Thread.UncaughtExceptionHandler
 import java.time.Duration
 import kotlin.system.exitProcess
-import java.util.Locale
 
 
 class IDEApplication : TermuxApplication() {
@@ -121,10 +120,6 @@ class IDEApplication : TermuxApplication() {
     ReflectionUtils.bypassHiddenAPIReflectionRestrictions()
     GlobalScope.launch {
       IDEColorSchemeProvider.init()
-    }
-    // Set Aliyun Maven Mirror At First Startup
-    if (!GeneralPreferences.prefManager.contains("use_aliyun_mirror")) {
-        GeneralPreferences.useAliyunMirror = Locale.getDefault().language == "zh"
     }
   }
 
