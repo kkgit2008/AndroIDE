@@ -94,5 +94,14 @@ object GeneralPreferences {
       prefManager.putString(LAST_OPENED_PROJECT, value)
     }
 
+  /**
+   * Whether use Aliyun Maven Mirror, automatically modified by language selector.
+   * Default value depends on local language.
+   */
+  var useAliyunMirror: Boolean
+    get() = prefManager.getBoolean("use_aliyun_mirror", Locale.getDefault().language == "zh")
+    set(value) {
+      prefManager.putBoolean("use_aliyun_mirror", value)
+    }
 
 }
