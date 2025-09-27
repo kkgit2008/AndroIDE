@@ -63,7 +63,7 @@ env:
 
 jobs:
   build:
-    name: Build(${{ inputs.abi_type }},${{ inputs.build_type }})APK
+    name: Build APK (${{ inputs.abi_type }},${{ inputs.build_type }})
     runs-on: ubuntu-latest
     outputs:
       ver_name:  ${{ steps.info.outputs.ver_name }}
