@@ -10,6 +10,11 @@ on:
       - '.github/workflows/*.yml'
   workflow_dispatch: {}
 
+# Cancel old runs
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: false
+
 jobs:
   build_matrix:
     strategy:
