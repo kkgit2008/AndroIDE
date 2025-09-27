@@ -92,25 +92,27 @@ class ProjectTemplateBuilder :
     return if (data.useKts) buildGradleSrcKts() else buildGradleSrcGroovy()
   }
 
-  /**
-   * Writes the `settings.gradle[.kts]` file in the project root directory.
-   */
-  fun settingsGradle() {
-    executor.save(settingsGradleSrc(), settingsGradleFile())
-  }
+    /**
+     * Writes the `settings.gradle[.kts]` file in the project root directory.
+     * @param useAliyunMirror Whether use Aliyun Maven Mirror
+     */
+    fun settingsGradle(useAliyunMirror: Boolean = false) {
+        executor.save(settingsGradleSrc(useAliyunMirror), settingsGradleFile())
+    }
+
+    /**
+     * Get the source for `settings.gradle[.kts]`.
+     * @param useAliyunMirror Whether use Aliyun Maven Mirror
+     */
+    fun settingsGradleSrc(useAliyunMirror: Boolean = false): String {
+        return settingsGradleSrcStr(useAliyunMirror)
+    }
 
   /**
    * Get the `settings.gradle[.kts]` file for this project.
    */
   fun settingsGradleFile(): File {
     return File(data.projectDir, data.optonallyKts("settings.gradle"))
-  }
-
-  /**
-   * Get the source for `settings.gradle[.kts]`.
-   */
-  fun settingsGradleSrc(): String {
-    return settingsGradleSrcStr()
   }
 
   /**
