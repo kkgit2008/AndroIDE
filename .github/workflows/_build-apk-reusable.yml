@@ -9,7 +9,7 @@
 
 
 
-name: Build APK (Reusable)
+name: .Reusable Action
 
 on:
   workflow_call:
@@ -77,7 +77,7 @@ env:
 
 jobs:
   build:
-    name: Build ${{ inputs.build_type }} APK (${{ inputs.abi_type }})
+    name: Build ${{ inputs.build_type }}-(${{ inputs.abi_type }}) APK
     runs-on: ubuntu-latest
     outputs:
       ver_name:  ${{ steps.info.outputs.ver_name }}
