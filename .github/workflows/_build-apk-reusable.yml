@@ -53,7 +53,7 @@ on:
         description: 'parsed or overridden PRERELEASE (Publish only)'
         value: ${{ jobs.build.outputs.prerelease }}
       notes:
-        description: 'parsed NOTES (release only)'
+        description: 'parsed NOTES (Publish only)'
         value: ${{ jobs.build.outputs.notes }}
 
 env:
@@ -62,7 +62,7 @@ env:
 
 jobs:
   build:
-    name: Build ${{ inputs.build_type }}-(${{ inputs.abi_type }}) APK
+    name: Build ${{ inputs.abi_type }} ${{ inputs.build_type }} APK
     runs-on: ubuntu-latest
     outputs:
       ver_name:  ${{ steps.info.outputs.ver_name }}
@@ -208,7 +208,7 @@ jobs:
           path: ${{ env.ARTIFACT_OUTPUT_DIR }}${{ inputs.abi_type }}/*
 
       - name: Upload Mapping (release only, not debug)
-        if: "${{ inputs.build_type == 'release' }}
+        if: ${{ inputs.build_type == 'release' }}
         uses: actions/upload-artifact@v4
         with:
           name: release-mappings-${{ steps.sha.outputs.short_sha }}
