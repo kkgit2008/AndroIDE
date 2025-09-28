@@ -152,6 +152,8 @@
   <string name="idepref_editor_use_magnifier_summary">在编辑器中选择文本时放大光标处的文本</string>
   <string name="idepref_editor_title">编辑器</string>
   <string name="idepref_build_title">构建 &amp; 运行</string>
+  <string name="title_maven_proxy_in_china">使用阿里云加速</string>
+  <string name="msg_maven_proxy_in_china">如果选中，在“创建项目”选项中新建的项目将使用阿里云作为首选镜像站以加速下载(需要重启)</string>
   <string name="title_open_projects">打开上一次的项目</string>
   <string name="msg_open_projects">如果选中，IDE 将记住上次打开的项目，并在下次启动时重新打开。</string>
   <string name="title_confirm_project_open">打开项目前确认</string>
