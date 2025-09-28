@@ -8,7 +8,7 @@
 
 
 
-name: .Reusable Action
+name: --- Reusable Action ---
 
 on:
   workflow_call:
