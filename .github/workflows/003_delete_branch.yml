@@ -4,7 +4,7 @@ on:
   workflow_dispatch:
     inputs:
       branch_to_delete:
-        description: 'Branch Name To Del(Can Not Be The Default One):'
+        description: 'Branch to del(must not default)'
         required: true
 
 jobs:
