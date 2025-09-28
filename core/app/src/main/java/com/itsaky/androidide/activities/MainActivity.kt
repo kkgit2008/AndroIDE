@@ -53,11 +53,7 @@ class MainActivity : EdgeToEdgeIDEActivity() {
   private var _binding: ActivityMainBinding? = null
 
     fun exitApp() {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
-            finishAndRemoveTask()
-        } else {
-            finishAffinity()
-        }
+        finishAndRemoveTask()
         
         Handler(Looper.getMainLooper()).postDelayed({
             android.os.Process.killProcess(android.os.Process.myPid())
