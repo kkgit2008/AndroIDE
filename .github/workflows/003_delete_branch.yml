@@ -4,7 +4,7 @@ on:
   workflow_dispatch:
     inputs:
       branch_to_delete:
-        description: '要删除的分支名（不能是当前默认分支）'
+        description: '要删除的分支名(不能是当前默认分支)'
         required: true
 
 jobs:
