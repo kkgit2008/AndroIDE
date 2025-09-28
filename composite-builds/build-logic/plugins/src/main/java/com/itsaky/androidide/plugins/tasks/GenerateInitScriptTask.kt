@@ -57,12 +57,12 @@ abstract class GenerateInitScriptTask : DefaultTask() {
               // Always specify the snapshots repository first
               maven {
                   // Add snapshots repository for AndroidIDE CI builds
-                  url "${VersionUtils.SONATYPE_SNAPSHOTS_REPO}"
+                  url = uri( "${VersionUtils.SONATYPE_SNAPSHOTS_REPO}" )
               }
               
               maven {
                   // Add public repository for AndroidIDE release builds
-                  url "${VersionUtils.SONATYPE_PUBLIC_REPO}"
+                  url = uri( "${VersionUtils.SONATYPE_PUBLIC_REPO}" )
               }
               
               mavenCentral()
