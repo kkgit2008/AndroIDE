@@ -4,19 +4,19 @@ on:
   workflow_dispatch:
     inputs:
       upstream:
-        description: 'Repo Name Of Upstream:'
+        description: 'Repo of upstream:'
         required: false
         default: 'kkgit2008/AndroIDE'
       upstream_branch:
-        description: 'Branch Name Of Upstream(Required):'
+        description: 'Branch of upstream(required):'
         required: true
         default: 'main'
       new_branch:
-        description: 'New Branch Name:'
+        description: 'New branch name:'
         required: false
         default: 'new-branch'
       set_default:
-        description: 'Set New Branch As Default Branch?'
+        description: 'Set as default branch?'
         type: boolean
         required: false
         default: false
