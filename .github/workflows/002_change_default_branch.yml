@@ -1,10 +1,10 @@
-name: 002 修改默认分支
+name: 002_Set_Default_Branch
 
 on:
   workflow_dispatch:
     inputs:
       target_branch:
-        description: '要设为默认的分支名'
+        description: 'Branch To Set Default:'
         required: true
 
 jobs:
@@ -13,10 +13,11 @@ jobs:
     permissions:
       contents: read
     steps:
-      - name: 修改默认分支
+      - name: Set Default
         run: |
           gh api repos/${{ github.repository }} \
              --method PATCH \
              --field default_branch="${{ inputs.target_branch }}"
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
