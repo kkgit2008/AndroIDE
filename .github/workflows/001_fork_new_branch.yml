@@ -5,16 +5,16 @@ on:
     inputs:
       upstream:
         description: 'Repo of upstream:'
-        required: false
+        required: true
         default: 'kkgit2008/AndroIDE'
       upstream_branch:
-        description: 'Branch of upstream:'
+        description: 'Branch of upstream(required):'
         required: true
         default: 'main'
       new_branch:
         description: 'New branch name:'
-        required: false
-        default: 'new-branch'
+        required: true
+        default: 'new'
       set_default:
         description: 'Set as default branch?'
         type: boolean
