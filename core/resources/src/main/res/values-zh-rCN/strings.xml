@@ -152,8 +152,8 @@
   <string name="idepref_editor_use_magnifier_summary">在编辑器中选择文本时放大光标处的文本</string>
   <string name="idepref_editor_title">编辑器</string>
   <string name="idepref_build_title">构建 &amp; 运行</string>
-  <string name="title_maven_proxy_in_china">使用阿里云加速</string>
-  <string name="msg_maven_proxy_in_china">如果选中，在“创建项目”选项中新建的项目将使用阿里云作为首选镜像站以加速下载(需要重启)</string>
+  <string name="title_maven_proxy_in_china">使用云镜像加速</string>
+  <string name="msg_maven_proxy_in_china">如果选中，在“主界面-创建项目”中新建的项目将使用阿里云作为首选镜像站以加速下载</string>
   <string name="title_open_projects">打开上一次的项目</string>
   <string name="msg_open_projects">如果选中，IDE 将记住上次打开的项目，并在下次启动时重新打开。</string>
   <string name="title_confirm_project_open">打开项目前确认</string>
@@ -352,12 +352,12 @@
   <string name="idepref_editor_colorScheme">配色方案</string>
   <string name="idepref_editor_colorScheme_summary">选择要在编辑器中使用的配色方案</string>
   <string name="idepref_general_uiMode">界面模式</string>
-  <string name="idepref_general_uiMode_summary">选择 IDE 的主题背景</string>
+  <string name="idepref_general_uiMode_summary">选择 IDE 的主色调</string>
   <string name="uiMode_light">浅色</string>
   <string name="uiMode_dark">深色</string>
   <string name="uiMode_system">跟随系统</string>
   <string name="idepref_general_themeSelector_title">主题</string>
-  <string name="idepref_general_themeSelector_summary">选择 AndroIDE Pro X 主题（需要重启）。</string>
+  <string name="idepref_general_themeSelector_summary">选择 IDE 的主题（需要重启）。</string>
   <string name="idepref_general_projectConfig">项目配置</string>
   <string name="msg_app_launch_failed">启动失败，请先安装应用。</string>
   <string name="idepref_java_diagnosticEnabled_title">启用诊断</string>
@@ -388,7 +388,7 @@
   <string name="msg_invalid_project_details">项目信息无效</string>
   <string name="msg_use_kts">将 Kotlin 脚本 (.kts) 用于 Gradle build 文件</string>
   <string name="title_privacy">隐私</string>
-  <string name="title_androidide_statistics">AndroIDE Pro X 统计</string>
+  <string name="title_androidide_statistics">统计信息</string>
   <string name="msg_androidide_statistics">通过提供匿名统计信息帮助我们改进 AndroIDE Pro X。 我们收集有关您设备的基本信息仅用于用户群统计。 可以在首选项中查看共享的确切数据。 您的数据是安全的，不会与第三方服务共享。 您可以随时在首选项中选择退出。</string>
   <string name="summary_anonymous_usage_stats">匿名使用统计</string>
   <string name="idepref_stats_optIn_title">统计数据收集</string>
@@ -402,10 +402,10 @@
   <string name="title_android_version">Android版本</string>
   <string name="btn_opt_in">选择加入</string>
   <string name="title_developer_options">开发者选项</string>
-  <string name="idepref_devOptions_summary">AndroIDE Pro X 的实验和调试选项</string>
+  <string name="idepref_devOptions_summary">实验和调试选项</string>
   <string name="idepref_group_debugging">调试</string>
   <string name="idepref_devOptions_dumpLogs_title">转储日志</string>
-  <string name="idepref_devOptions_dumpLogs_summary">将 AndroIDE Pro X 日志转储到 $HOME/.androidide/logs</string>
+  <string name="idepref_devOptions_dumpLogs_summary">将 IDE 的日志转储到 $HOME/.androidide/logs</string>
   <string name="msg_emptyview_applogs">运行应用的 debug 变体以在此处查看其日志。</string>
   <string name="msg_logsender_disabled">LogSender 已禁用。您可以在首选项中启用它。</string>
   <string name="msg_emptyview_idelogs">IDE 中的日志显示在这里。</string>
@@ -413,7 +413,7 @@
   <string name="msg_emptyview_buildoutput">"构建应用或运行任务以在此处查看其构建输出。"</string>
   <string name="msg_codeaction_failed">无法执行代码操作</string>
   <string name="idepref_devOptions_enableLogsender_title">启用 LogSender</string>
-  <string name="idepref_devOptions_enableLogsender_summary">禁用后，应用的日志将不会显示在 AndroIDE Pro X 中</string>
+  <string name="idepref_devOptions_enableLogsender_summary">禁用后，应用的日志将不会显示在 IDE 中</string>
   <string name="title_build_variants">构建变体</string>
   <string name="title_apply">应用</string>
   <string name="title_discard">放弃</string>
@@ -438,7 +438,7 @@
   <string name="theme_sunny_glow">阳光熠熠</string>
   <string name="theme_material_you">Material You</string>
   <string name="idepref_general_localeSelector_title">语言</string>
-  <string name="idepref_general_localeSelector_summary">选择 AndroIDE Pro X 的语言。</string>
+  <string name="idepref_general_localeSelector_summary">选择 IDE 的语言。</string>
   <string name="locale_system_default">系统默认</string>
   <string name="msg_project_dir_inaccessible">无法访问项目目录</string>
   <string name="msg_file_is_not_dir">所选文件不是目录</string>
