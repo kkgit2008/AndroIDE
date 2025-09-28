@@ -58,8 +58,29 @@ on:
         value: ${{ jobs.build.outputs.notes }}
 
 env:
+  # Output configuration
   APK_OUTPUT_DIR: 'core/app/build/outputs/apk/'
   ARTIFACT_OUTPUT_DIR: 'artifact_output/'
+
+  # Signing info
+  IDE_SIGNING_ALIAS: androiddebugkeyXX
+  IDE_SIGNING_KEY_PASS: androidXX
+  IDE_SIGNING_STORE_PASS: androidXX
+
+
+  #IDE_SIGNING_AUTH_PASS: ${{ secrets.IDE_SIGNING_AUTH_PASS }}
+  #IDE_SIGNING_AUTH_USER: ${{ secrets.IDE_SIGNING_AUTH_USER }}
+  #IDE_SIGNING_URL: ${{ secrets.IDE_SIGNING_URL }}
+  #IDE_SIGNING_KEY_BIN: ${{ secrets.IDE_SIGNING_KEY_BIN }}
+  ### Publishing credentials
+  #ORG_GRADLE_PROJECT_mavenCentralUsername: ${{ secrets.MVN_USERNAME }}
+  #ORG_GRADLE_PROJECT_mavenCentralPassword: ${{ secrets.MVN_PASSWORD }}
+  #ORG_GRADLE_PROJECT_signingInMemoryKey: ${{ secrets.MVN_SIGNING_KEY }}
+  #ORG_GRADLE_PROJECT_signingInMemoryKeyId: ${{ secrets.MVN_SIGNING_KEY_ID }}
+  #ORG_GRADLE_PROJECT_signingInMemoryKeyPassword: ${{ secrets.MVN_SIGNING_KEY_PASSWORD }}
+  ### Build configuration
+  #BUILD_IS_RELEASE: ${{ github.ref == 'refs/heads/main' || github.ref == 'refs/heads/release/**' }}
+  #ReleaseAndroidIDE: ${{ github.ref == 'refs/heads/main' }}
 
 jobs:
   build:
