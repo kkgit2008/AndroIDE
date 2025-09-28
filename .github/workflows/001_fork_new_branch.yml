@@ -1,0 +1,57 @@
+name: 01 从上游指定分支新建分支并可选设为默认
+
+on:
+  workflow_dispatch:
+    inputs:
+      upstream:
+        description: '上游仓库，格式 owner/repo'
+        required: true
+        default: 'microsoft/vscode'
+      upstream_branch:
+        description: '上游仓库的哪个分支'
+        required: true
+        default: 'main'
+      new_branch:
+        description: '在本仓库创建的分支名'
+        required: true
+        default: 'upstream-sync'
+      set_default:
+        description: '是否把新分支设为默认？'
+        type: boolean
+        required: false
+        default: false
+
+jobs:
+  fork-create:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write          # 推送分支
+    steps:
+      - name: 检出本仓库
+        uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          fetch-depth: 0       # 完整历史，避免 shallow 冲突
+
+      - name: 配置 git 身份
+        run: |
+          git config user.name  "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+
+      - name: 添加上游 remote 并拉取指定分支
+        run: |
+          git remote add upstream https://github.com/${{ inputs.upstream }}.git
+          git fetch upstream ${{ inputs.upstream_branch }}:${{ inputs.new_branch }}
+
+      - name: 推送新分支到本仓库
+        run: |
+          git push -u origin ${{ inputs.new_branch }}
+
+      - name: 如果需要，设为默认分支
+        if: inputs.set_default
+        run: |
+          gh api repos/${{ github.repository }} \
+             --method PATCH \
+             --field default_branch="${{ inputs.new_branch }}"
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
