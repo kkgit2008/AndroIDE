@@ -3,11 +3,11 @@ on:
   workflow_dispatch:
     inputs:
       head:
-        description: Branch in your repo to PR
+        description: Branch in your repo to PR(empty=default)
         required: false
         default: ''
       title:
-        description: PR title (empty=auto)
+        description: PR title(empty=auto)
         required: false
         default: ''
 
@@ -15,24 +15,24 @@ jobs:
   create-pr:
     runs-on: ubuntu-latest
     permissions:
-      contents: read          # need repo info
-      pull-requests: write    # create PR in upstream
+      contents: read          # fetch repo info
+      pull-requests: write    # open PR in upstream
     steps:
-      # checkout the chosen branch; fallback to repo default if input is empty
+      # check out chosen branch; fallback to default if empty
       - uses: actions/checkout@v4
         with:
           ref: ${{ inputs.head || github.event.repository.default_branch }}
 
-      # detect upstream repo & its default branch, then open PR
+      # detect upstream repo & default branch, then create PR
       - name: open-pull-request
         run: |
-          # grab upstream owner/repo
+          # detect upstream owner/repo
           UP=$(gh api "${{ github.repository }}" --jq .parent.full_name)
-          # grab upstream default branch
-          UB=$(gh api "$UP" --jq .default_branch)
-          # decide head branch
+          # detect upstream default branch
+          UB=$(gh api "repos/$UP" --jq .default_branch)
+          # set head branch
           HB="${{ inputs.head || github.event.repository.default_branch }}"
-          # create PR; silent success if already exists
+          # create PR; ignore if duplicate
           gh pr create -R "$UP" -H "${{ github.repository_owner }}:$HB" -B "$UB" \
              -t "${{ inputs.title || 'sync' }}" -b "Auto PR from $HB" || true
         env:
