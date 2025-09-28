@@ -1,10 +1,10 @@
-name: 003 删除指定分支
+name: 003_Delete_Any_Branch
 
 on:
   workflow_dispatch:
     inputs:
       branch_to_delete:
-        description: '要删除的分支名(不能是当前默认分支)'
+        description: 'Branch Name To Del(Can't Be The Default One):'
         required: true
 
 jobs:
@@ -13,25 +13,26 @@ jobs:
     permissions:
       contents: write
     steps:
-      - name: 检出仓库（仅用于获取默认分支名）
+      - name: Checkout Code（To Get The Default Branch Name）
         uses: actions/checkout@v4
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
           fetch-depth: 1
 
-      - name: 获取当前默认分支
+      - name: Get The Default Branch Name
         id: default
         run: echo "branch=$(gh api repos/${{ github.repository }} --jq .default_branch)" >> $GITHUB_OUTPUT
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: 禁止删除默认分支
+      - name: To Forbid Deleting The Default Branch
         run: |
           if [ "${{ inputs.branch_to_delete }}" == "${{ steps.default.outputs.branch }}" ]; then
-            echo "❌ 不能删除默认分支！"
+            echo "❌ Can't Delete The Default Branch!"
             exit 1
           fi
 
-      - name: 删除远程分支
+      - name: Delete Branch
         run: |
           git push origin --delete ${{ inputs.branch_to_delete }}
+
