@@ -30,6 +30,7 @@ object GeneralPreferences {
   const val UI_MODE = "idepref_general_uiMode"
   const val SELECTED_THEME = "idpref_general_theme"
   const val SELECTED_LOCALE = "idpref_general_locale"
+  const val PREFER_CHINA_MAVEN = "idepref_general_preferChinaMaven"
   const val OPEN_PROJECTS = "idepref_general_autoOpenProjects"
   const val CONFIRM_PROJECT_OPEN = "idepref_general_confirmProjectOpen"
   const val TERMINAL_USE_SYSTEM_SHELL = "idepref_general_terminalShell"
@@ -68,6 +69,12 @@ object GeneralPreferences {
     get() = prefManager.getBoolean(IS_FIRST_PROJECT_BUILD, true)
     set(value) {
       prefManager.putBoolean(IS_FIRST_PROJECT_BUILD, value)
+    }
+
+  var preferMavenproxy: Boolean
+    get() = prefManager.getBoolean(PREFER_CHINA_MAVEN, false)
+    set(value) {
+      prefManager.putBoolean(PREFER_CHINA_MAVEN, value)
     }
 
   var autoOpenProjects: Boolean
