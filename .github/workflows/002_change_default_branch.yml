@@ -4,7 +4,7 @@ on:
   workflow_dispatch:
     inputs:
       target_branch:
-        description: 'Branch To Set Default:'
+        description: 'Branch to set default:'
         required: true
 
 jobs:
