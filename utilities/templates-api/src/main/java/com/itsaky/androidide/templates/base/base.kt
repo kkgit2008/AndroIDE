@@ -53,6 +53,8 @@ import com.itsaky.androidide.utils.AndroidUtils
 import com.itsaky.androidide.utils.Environment
 import java.io.File
 
+import com.itsaky.androidide.preferences.internal.GeneralPreferences
+
 typealias AndroidModuleTemplateConfigurator = AndroidModuleTemplateBuilder.() -> Unit
 
 /**
@@ -123,7 +125,8 @@ inline fun baseProject(projectName: StringParameter = projectNameParameter(),
       buildGradle()
 
       // settings.gradle[.kts]
-      settingsGradle()
+      //settingsGradle()
+      settingsGradle(useAliyunMirror = GeneralPreferences.useAliyunMirror)
 
       // gradle.properties
       gradleProps()
