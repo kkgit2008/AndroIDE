@@ -4,7 +4,7 @@ on:
   workflow_dispatch:
     inputs:
       branch_to_delete:
-        description: 'Branch Name To Del(Can't Be The Default One):'
+        description: 'Branch Name To Del(Can Not Be The Default One):'
         required: true
 
 jobs:
@@ -28,7 +28,7 @@ jobs:
       - name: To Forbid Deleting The Default Branch
         run: |
           if [ "${{ inputs.branch_to_delete }}" == "${{ steps.default.outputs.branch }}" ]; then
-            echo "❌ Can't Delete The Default Branch!"
+            echo "❌ Can Not Delete The Default Branch!"
             exit 1
           fi
 
