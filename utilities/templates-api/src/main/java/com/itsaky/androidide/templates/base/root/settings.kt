@@ -20,7 +20,7 @@ package com.itsaky.androidide.templates.base.root
 import com.itsaky.androidide.templates.base.ProjectTemplateBuilder
 
 internal fun ProjectTemplateBuilder.settingsGradleSrcStr(
-    useAliyunMirror: Boolean = false
+    useAliyunMirror: Boolean
 ): String {
 
     val pluginRepos = if (useAliyunMirror) """
@@ -39,6 +39,8 @@ internal fun ProjectTemplateBuilder.settingsGradleSrcStr(
         google()
     """.trimIndent()
 
+    val includeBlock = modules.joinToString(separator = "\n") { "include(\":${it.name}\")" }
+
     return """
 pluginManagement {
     repositories {
@@ -55,6 +57,6 @@ dependencyResolutionManagement {
 
 rootProject.name = "${data.name}"
 
-${modules.joinToString(separator = "\n") { "include(\":${it.name}\")" }}
+$includeBlock
     """.trimIndent()
 }
