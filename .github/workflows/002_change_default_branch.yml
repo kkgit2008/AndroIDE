@@ -1,0 +1,22 @@
+name: 002 修改默认分支
+
+on:
+  workflow_dispatch:
+    inputs:
+      target_branch:
+        description: '要设为默认的分支名'
+        required: true
+
+jobs:
+  switch:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - name: 修改默认分支
+        run: |
+          gh api repos/${{ github.repository }} \
+             --method PATCH \
+             --field default_branch="${{ inputs.target_branch }}"
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
