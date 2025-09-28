@@ -6,6 +6,7 @@ on:
       branch_to_delete:
         description: 'Branch to del(must not default)'
         required: true
+        default: 'kkgitProMax-patch-1'
 
 jobs:
   delete:
