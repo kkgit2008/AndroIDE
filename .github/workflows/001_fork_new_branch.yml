@@ -14,7 +14,7 @@ on:
       new_branch:
         description: 'New branch name:'
         required: true
-        default: 'new'
+        default: 'new-branch'
       set_default:
         description: 'Set as default branch?'
         type: boolean
