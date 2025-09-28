@@ -19,26 +19,42 @@ package com.itsaky.androidide.templates.base.root
 
 import com.itsaky.androidide.templates.base.ProjectTemplateBuilder
 
-internal fun ProjectTemplateBuilder.settingsGradleSrcStr(): String {
-  return """
+internal fun ProjectTemplateBuilder.settingsGradleSrcStr(
+    useAliyunMirror: Boolean = false
+): String {
+
+    val pluginRepos = if (useAliyunMirror) """
+        maven { url = uri("https://maven.aliyun.com/repository/gradle-plugin") }
+        maven { url = uri("https://maven.aliyun.com/repository/public") }
+    """.trimIndent() else """
+        gradlePluginPortal()
+        mavenCentral()
+    """.trimIndent()
+
+    val depRepos = if (useAliyunMirror) """
+        maven { url = uri("https://maven.aliyun.com/repository/public") }
+        maven { url = uri("https://maven.aliyun.com/repository/google") }
+    """.trimIndent() else """
+        mavenCentral()
+        google()
+    """.trimIndent()
+
+    return """
 pluginManagement {
-  repositories {
-    gradlePluginPortal()
-    google()
-    mavenCentral()
-  }
+    repositories {
+        $pluginRepos
+    }
 }
 
 dependencyResolutionManagement {
-  repositoriesMode.set(RepositoriesMode.FAIL_ON_PROJECT_REPOS)
-  repositories {
-    google()
-    mavenCentral()
-  }
+    repositoriesMode.set(RepositoriesMode.FAIL_ON_PROJECT_REPOS)
+    repositories {
+        $depRepos
+    }
 }
 
 rootProject.name = "${data.name}"
 
-${modules.joinToString(separator = ", ") { "include(\"${it.name}\")" }}    
-  """.trim()
+${modules.joinToString(separator = "\n") { "include(\":${it.name}\")" }}
+    """.trimIndent()
 }

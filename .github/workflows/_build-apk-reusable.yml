@@ -3,72 +3,58 @@
 #  Reusable : Can build all ABI/build-type and upload APK + mapping
 #  Read file RELEASE_INFO and get params：
 #    - VER_NAME          （Required）
-#    - VER_SUFFIX        （Optional，default to '-dev'）
-#    - TITLE / BRANCH / PRERELEASE / NOTES  (Only read when release)
+#    - TITLE / BRANCH / PRERELEASE / NOTES  (Only read when publish)
 # ===================================================================
 
 
 
-name: Build APK (Reusable)
+name: .Reusable Action
 
 on:
   workflow_call:
   
     inputs:
-      build_type:
-        description: 'debug or release'
-        required: true
-        type: string
+    
       abi_type:
         description: 'e.g. arm64-v8a'
         required: true
         type: string
-      info_file:
+      build_type:
+        description: 'debug or release'
+        required: true
+        type: string
+      
+      # Optional input parameters
+      
+      override_info_file:
         description: 'path to RELEASE_INFO (repo root relative)'
         required: false
         default: 'RELEASE_INFO'
         type: string
-      
-      # Optional parameters
-      
-      override_ver_name:
-        description: 'force use this ver_name'
+      override_IsPublish:
+        description: 'whether is publishing'
         required: false
-        type: string
-      override_ver_suffix:
-        description: 'force use this ver_suffix'
-        required: false
-        type: string
-      override_title:
-        description: 'force use this title (release only)'
-        required: false
-        type: string
-      override_prerelease:
-        description: 'force use this prerelease flag (release only)'
-        required: false
+        default: "false"
         type: string
 
     outputs:
       ver_name:
         description: 'parsed or overridden VER_NAME'
         value: ${{ jobs.build.outputs.ver_name }}
-      ver_suffix:
-        description: 'parsed or overridden VER_SUFFIX'
-        value: ${{ jobs.build.outputs.ver_suffix }}
       short_sha:
         description: 'short SHA of the run'
         value: ${{ jobs.build.outputs.short_sha }}
       title:
-        description: 'parsed or overridden TITLE (release only)'
+        description: 'parsed or overridden TITLE (Publish only)'
         value: ${{ jobs.build.outputs.title }}
       branch:
         description: 'parsed BRANCH (release only)'
         value: ${{ jobs.build.outputs.branch }}
       prerelease:
-        description: 'parsed or overridden PRERELEASE (release only)'
+        description: 'parsed or overridden PRERELEASE (Publish only)'
         value: ${{ jobs.build.outputs.prerelease }}
       notes:
-        description: 'parsed NOTES (release only)'
+        description: 'parsed NOTES (Publish only)'
         value: ${{ jobs.build.outputs.notes }}
 
 env:
@@ -77,11 +63,10 @@ env:
 
 jobs:
   build:
-    name: Build ${{ inputs.build_type }} APK (${{ inputs.abi_type }})
+    name: Build APK (${{ inputs.abi_type }},${{ inputs.build_type }})
     runs-on: ubuntu-latest
     outputs:
       ver_name:  ${{ steps.info.outputs.ver_name }}
-      ver_suffix: ${{ steps.info.outputs.ver_suffix }}
       short_sha:  ${{ steps.sha.outputs.short_sha }}
       title:      ${{ steps.info.outputs.title }}
       branch:     ${{ steps.info.outputs.branch }}
@@ -105,8 +90,8 @@ jobs:
         id: info
         shell: bash
         run: |
-          set -euo pipefail
-          INFO_FILE="${{ inputs.info_file }}"
+          set -euxo pipefail
+          INFO_FILE="${{ inputs.override_info_file }}"
 
           # Exit When File Not Exists Or Is Empty
           if [ ! -s "$INFO_FILE" ]; then
@@ -119,35 +104,32 @@ jobs:
           sed "s/shortSHA/${{ steps.sha.outputs.short_sha }}/g" "$INFO_FILE" > "$TEMP"
 
           # --------------- Common ---------------
+          
+          if [ "${{ inputs.override_IsPublish }}" == "true" ]; then
+            VER_SUFFIX=""
+          elif [ "${{ inputs.build_type }}" == "release" ]; then
+            VER_SUFFIX=-dev-"${{ steps.sha.outputs.short_sha }}"
+          elif [ "${{ inputs.build_type }}" == "debug" ]; then
+            VER_SUFFIX=-devDebug-"${{ steps.sha.outputs.short_sha }}"
+          fi
+          
           VER_NAME=$(grep '^VER_NAME=' "$TEMP" | cut -d'=' -f2- | tr -d '[:space:]' || true)
           [ -z "$VER_NAME" ] && { echo "VER_NAME missing"; exit 1; }
-          
-          # Overwrite by input param
-          if [ -n "${{ inputs.override_ver_name }}" ]; then
-            VER_NAME="${{ inputs.override_ver_name }}"
-          fi
 
-          VER_SUFFIX=$(grep '^VER_SUFFIX=' "$TEMP" | cut -d'=' -f2- | tr -d '[:space:]' || true)
-          [ -z "$VER_SUFFIX" ] && VER_SUFFIX="-dev"
-          if [ -n "${{ inputs.override_ver_suffix }}" ]; then
-            VER_SUFFIX="${{ inputs.override_ver_suffix }}"
-          fi
 
-          # --------------- release Only ---------------
-          if [ "${{ inputs.build_type }}" == "release" ]; then
+          # --------------- Publish Only ---------------
+          if [ "${{ inputs.override_IsPublish }}" == "true" ]; then
             TITLE=$(grep '^TITLE=' "$TEMP" | cut -d'=' -f2- | sed 's/^[[:space:]]*//;s/[[:space:]]*$//' || true)
             [ -z "$TITLE" ] && TITLE="${VER_NAME} ${{ steps.sha.outputs.short_sha }}"
-            [ -n "${{ inputs.override_title }}" ] && TITLE="${{ inputs.override_title }}"
-
-            BRANCH=$(grep '^BRANCH=' "$TEMP" | cut -d'=' -f2- | tr -d '[:space:]' || true)
-            [ -z "$BRANCH" ] && { echo "BRANCH missing"; exit 1; }
 
             PRERELEASE=$(grep '^PRERELEASE=' "$TEMP" | cut -d'=' -f2- | tr -d '[:space:]' || true)
             [ -z "$PRERELEASE" ] && PRERELEASE="true"
-            [ -n "${{ inputs.override_prerelease }}" ] && PRERELEASE="${{ inputs.override_prerelease }}"
+            
+            BRANCH=$(grep '^BRANCH=' "$TEMP" | cut -d'=' -f2- | tr -d '[:space:]' || true)
+            [ -z "$BRANCH" ] && { echo "BRANCH missing or empty"; exit 1; }
 
             NOTES=$(awk 'BEGIN{f=0} /^NOTES=/{f=1; sub(/^NOTES=/,""); print; next} f' "$TEMP" || true)
-            [ -z "$NOTES" ] && { echo "NOTES missing"; exit 1; }
+            [ -z "$NOTES" ] && { echo "NOTES missing or empty"; exit 1; }
 
             # Set Params
             echo "title=$TITLE"      >> $GITHUB_OUTPUT
@@ -163,11 +145,11 @@ jobs:
           echo "ver_name=$VER_NAME"     >> $GITHUB_OUTPUT
           echo "ver_suffix=$VER_SUFFIX" >> $GITHUB_OUTPUT
 
-          # ---------- Print Params For Debugging ----------
+          # ---------- Print Params ----------
           echo ">>>> RELEASE_INFO parsed:"
           echo "  ver_name : $VER_NAME"
           echo "  ver_suffix: $VER_SUFFIX"
-          if [ "${{ inputs.build_type }}" == "release" ]; then
+          if [ "${{ inputs.override_IsPublish }}" == "true" ]; then
             echo "  title    : $TITLE"
             echo "  branch   : $BRANCH"
             echo "  prerelease: $PRERELEASE"
@@ -212,7 +194,7 @@ jobs:
         run: |
           mkdir -p ${{ env.ARTIFACT_OUTPUT_DIR }}${{ inputs.abi_type }}
           SRC=${{ env.APK_OUTPUT_DIR }}${{ inputs.build_type }}/app-${{ inputs.abi_type }}-${{ inputs.build_type }}.apk
-          DST=${{ env.ARTIFACT_OUTPUT_DIR }}${{ inputs.abi_type }}/AndroIDE${{ steps.info.outputs.ver_suffix }}-${{ inputs.abi_type }}-${{ inputs.build_type }}.apk
+          DST=${{ env.ARTIFACT_OUTPUT_DIR }}${{ inputs.abi_type }}/AndroIDE-${{ inputs.abi_type }}${{ steps.info.outputs.ver_suffix }}.apk
           cp "$SRC" "$DST"
           sha256sum "$DST" > "$DST.sha256"
 
@@ -223,10 +205,10 @@ jobs:
       - name: Upload APK Artifact
         uses: actions/upload-artifact@v4
         with:
-          name: AndroIDE${{ steps.info.outputs.ver_suffix }}-${{ inputs.abi_type }}-${{ inputs.build_type }}
+          name: AndroIDE-${{ inputs.abi_type }}${{ steps.info.outputs.ver_suffix }}
           path: ${{ env.ARTIFACT_OUTPUT_DIR }}${{ inputs.abi_type }}/*
 
-      - name: Upload Mapping (release only)
+      - name: Upload Mapping (release only, not debug)
         if: ${{ inputs.build_type == 'release' }}
         uses: actions/upload-artifact@v4
         with:

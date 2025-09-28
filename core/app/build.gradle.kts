@@ -103,8 +103,6 @@ android {
     
     debug {
       signingConfig = signingConfigs.getByName("releaseee")
-      versionNameSuffix = "-debug"
-      //applicationIdSuffix = '.debug'
     }
   }
 

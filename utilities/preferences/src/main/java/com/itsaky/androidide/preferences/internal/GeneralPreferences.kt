@@ -19,6 +19,7 @@ package com.itsaky.androidide.preferences.internal
 
 import androidx.appcompat.app.AppCompatDelegate
 import com.itsaky.androidide.resources.localization.LocaleProvider
+import java.util.Locale
 
 /**
  * @author Akash Yadav
@@ -94,5 +95,14 @@ object GeneralPreferences {
       prefManager.putString(LAST_OPENED_PROJECT, value)
     }
 
+  /**
+   * Whether use Aliyun Maven Mirror, automatically modified by language selector.
+   * Default value depends on local language.
+   */
+  var useAliyunMirror: Boolean
+    get() = prefManager.getBoolean("use_aliyun_mirror", Locale.getDefault().language == "zh")
+    set(value) {
+      prefManager.putBoolean("use_aliyun_mirror", value)
+    }
 
 }
