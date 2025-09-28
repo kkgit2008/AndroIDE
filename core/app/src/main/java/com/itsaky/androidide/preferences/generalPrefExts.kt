@@ -68,6 +68,7 @@ class ProjectConfig(
 ) : IPreferenceGroup() {
 
   init {
+    addPreference(UseChinaMavenProxy())
     addPreference(OpenLastProject())
     addPreference(ConfirmProjectOpen())
   }
@@ -193,6 +194,27 @@ class LocaleSelector(
     GeneralPreferences.selectedLocale = entry?.data?.let { localeKey ->
       if (localeKey is Int) null else localeKey as String
     }
+  }
+}
+
+@Parcelize
+class UseChinaMavenProxy(
+  override val key: String = GeneralPreferences.PREFER_CHINA_MAVEN,
+  override val title: Int = string.title_maven_proxy_in_china,
+  override val summary: Int? = string.msg_maven_proxy_in_china,
+  override val icon: Int? = drawable.ic_telegram
+) : SwitchPreference() {
+
+  override fun onCreatePreference(context: Context): Preference {
+    val pref = super.onCreatePreference(context) as androidx.preference.SwitchPreference
+    pref.isChecked = GeneralPreferences.preferMavenproxy
+    return pref
+  }
+
+  override fun onPreferenceChanged(preference: Preference, newValue: Any?): Boolean {
+    GeneralPreferences.preferMavenproxy = newValue as Boolean?
+      ?: GeneralPreferences.preferMavenproxy
+    return true
   }
 }
 
