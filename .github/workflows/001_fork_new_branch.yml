@@ -8,7 +8,7 @@ on:
         required: false
         default: 'kkgit2008/AndroIDE'
       upstream_branch:
-        description: 'Branch of upstream(required):'
+        description: 'Branch of upstream:'
         required: true
         default: 'main'
       new_branch:
