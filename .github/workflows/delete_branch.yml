@@ -1,4 +1,4 @@
-name: 003_Delete_Any_Branch
+name: Delete Any Branch
 
 on:
   workflow_dispatch:
