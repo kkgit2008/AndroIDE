@@ -36,18 +36,22 @@ class TerminalBootstrapPackagesPlugin : Plugin<Project> {
      * The bootstrap packages, mapped with the CPU ABI as the key and the ZIP file's sha256sum as the value.
      */
     private val BOOTSTRAP_PACKAGES = mapOf(
-      "aarch64" to "68da03ed270d59cafcd37981b00583c713b42cb440adf03d1bf980f39a55181d",
-      "arm" to "f3d9f2da7338bd00b02a8df192bdc22ad431a5eef413cecf4cd78d7a54ffffbf",
-      "x86_64" to "6e4e50a206c3384c36f141b2496c1a7c69d30429e4e20268c51a84143530af67"
+//       "aarch64" to "68da03ed270d59cafcd37981b00583c713b42cb440adf03d1bf980f39a55181d",
+//       "arm" to "f3d9f2da7338bd00b02a8df192bdc22ad431a5eef413cecf4cd78d7a54ffffbf",
+//       "x86_64" to "6e4e50a206c3384c36f141b2496c1a7c69d30429e4e20268c51a84143530af67"
+      "aarch64" to "a749075c145cb19dc27dac7785d4fe1dff867ac5b83ae0fa127195a75d487e02",
+      "arm" to "69c816d1cc0ebb98aa2456a565c62872de8a855f7feb0d3e27fcef193d3c8941",
+      "x86_64" to "89874db7f5f41d30b5a17f98fd3f714a6d3c16a17653ea6da5598951480df38c"
     )
 
     /**
      * The bootstrap packages version, basically the tag name of the GitHub release.
      */
-    private const val BOOTSTRAP_PACKAGES_VERSION = "16.12.2023"
+//    private const val BOOTSTRAP_PACKAGES_VERSION = "16.12.2023"
+    private const val BOOTSTRAP_PACKAGES_VERSION = "29.09.2025"
 
     private const val PACKAGES_DOWNLOAD_URL =
-      "https://github.com/AndroidIDEOfficial/terminal-packages/releases/download/bootstrap-%1\$s/bootstrap-%2\$s.zip"
+      "https://github.com/kkgit2008/terminal-packages/releases/download/bootstrap-%1\$s/bootstrap-250929-%2\$s.zip"
   }
 
   override fun apply(target: Project) {
@@ -57,7 +61,7 @@ class TerminalBootstrapPackagesPlugin : Plugin<Project> {
         .get().asFile
 
       val files = BOOTSTRAP_PACKAGES.map { (arch, sha256) ->
-        val file = File(bootstrapOut, "bootstrap-${arch}.zip")
+        val file = File(bootstrapOut, "bootstrap-250929-${arch}.zip")
         file.parentFile.mkdirs()
 
         DownloadUtils.doDownload(
