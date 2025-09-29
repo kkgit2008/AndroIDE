@@ -31,7 +31,7 @@ jobs:
       - name: Parse RELEASE_INFO
         id: info
         run: |
-          set -euxo pipefail
+          set -euo pipefail
           INFO_FILE=RELEASE_INFO
           [ -s "$INFO_FILE" ] || { echo "$INFO_FILE not found or empty"; exit 1; }
           VER=$(grep '^VER_NAME=' "$INFO_FILE" | cut -d'=' -f2- | tr -d '[:space:]')
