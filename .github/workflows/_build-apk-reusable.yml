@@ -111,7 +111,7 @@ jobs:
         id: info
         shell: bash
         run: |
-          set -euxo pipefail
+          set -euo pipefail
           INFO_FILE="${{ inputs.override_info_file }}"
           #[ -s "$INFO_FILE" ] || { echo "$INFO_FILE not found or empty"; exit 1; }
 
