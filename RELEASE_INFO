@@ -57,7 +57,7 @@ NOTES=
 - 移除无效选项菜单及无用文件
 - 修复「断开日志发送器」经常无法点击的问题（若仍无效请重启 IDE，非 bug）
 - 修复高概率崩溃 bug [#13](https://github.com/kkgit2008/AndroIDE/discussions/13)  
-- 视频演示：操作步骤见下方 ⬇️  
+	见下方视频演示： ⬇️  
   https://github.com/user-attachments/assets/c8b54c68-3f0f-4629-9b6b-d902e2592169
 - 动作菜单全部显示并重新排序，避免误触
 - 修复 DesignerTextureView 引发的崩溃 [#5](https://github.com/kkgit2008/AndroIDE/discussions/5)
@@ -76,7 +76,7 @@ NOTES=
 - Removed invalid option menus and unused files
 - Fixed "Disconnect log senders" often unclickable (restart IDE if still failing; not a bug)
 - Fixed high-probability crash [#13](https://github.com/kkgit2008/AndroIDE/discussions/13)
-- Video demo: see link above ⬆️
+	see link of video demo above ⬆️
 - All action menus are now visible & re-ordered to prevent mis-clicks
 - Fixed crash from DesignerTextureView [#5](https://github.com/kkgit2008/AndroIDE/discussions/5)
 - Completed EN→CN translations and polished strings
