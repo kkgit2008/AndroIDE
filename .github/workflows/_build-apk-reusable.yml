@@ -107,49 +107,42 @@ jobs:
         id: sha
         run: echo "short_sha=${GITHUB_SHA::7}" >> $GITHUB_OUTPUT
 
-      - name: Read & Parse RELEASE_INFO
+      - name: Read & Parse INFO_FILE
         id: info
         shell: bash
         run: |
           set -euxo pipefail
           INFO_FILE="${{ inputs.override_info_file }}"
+          #[ -s "$INFO_FILE" ] || { echo "$INFO_FILE not found or empty"; exit 1; }
 
-          # Exit When File Not Exists Or Is Empty
-          if [ ! -s "$INFO_FILE" ]; then
-            echo "$INFO_FILE not found or empty"
-            exit 1
-          fi
-
-          # Set Temp File To Handle shortSHA In INFO_FILE
-          TEMP=$(mktemp)
-          sed "s/shortSHA/${{ steps.sha.outputs.short_sha }}/g" "$INFO_FILE" > "$TEMP"
+          # Read file
+          CONTENT=$(sed "s/shortSHA/${{ steps.sha.outputs.short_sha }}/g" "$INFO_FILE")
 
           # --------------- Common ---------------
           
+          VER_NAME=$(echo "$CONTENT" | grep '^VER_NAME=' | cut -d= -f2- | tr -d '[:space:]')
+          [ -z "$VER_NAME" ] && { echo "VER_NAME missing"; exit 1; }
+
           if [ "${{ inputs.override_IsPublish }}" == "true" ]; then
             VER_SUFFIX=""
           elif [ "${{ inputs.build_type }}" == "release" ]; then
             VER_SUFFIX=-dev-"${{ steps.sha.outputs.short_sha }}"
-          elif [ "${{ inputs.build_type }}" == "debug" ]; then
+          else
             VER_SUFFIX=-devDebug-"${{ steps.sha.outputs.short_sha }}"
           fi
           
-          VER_NAME=$(grep '^VER_NAME=' "$TEMP" | cut -d'=' -f2- | tr -d '[:space:]' || true)
-          [ -z "$VER_NAME" ] && { echo "VER_NAME missing"; exit 1; }
-
-
           # --------------- Publish Only ---------------
           if [ "${{ inputs.override_IsPublish }}" == "true" ]; then
-            TITLE=$(grep '^TITLE=' "$TEMP" | cut -d'=' -f2- | sed 's/^[[:space:]]*//;s/[[:space:]]*$//' || true)
+            TITLE=$(echo "$CONTENT" | grep '^TITLE=' | cut -d= -f2- | sed 's/^[[:space:]]*//;s/[[:space:]]*$//' || true)
             [ -z "$TITLE" ] && TITLE="${VER_NAME} ${{ steps.sha.outputs.short_sha }}"
 
-            PRERELEASE=$(grep '^PRERELEASE=' "$TEMP" | cut -d'=' -f2- | tr -d '[:space:]' || true)
+            PRERELEASE=$(echo "$CONTENT" | grep '^PRERELEASE=' | cut -d= -f2- | tr -d '[:space:]' || true)
             [ -z "$PRERELEASE" ] && PRERELEASE="true"
             
-            BRANCH=$(grep '^BRANCH=' "$TEMP" | cut -d'=' -f2- | tr -d '[:space:]' || true)
+            BRANCH=$(echo "$CONTENT" | grep '^BRANCH=' | cut -d= -f2- | tr -d '[:space:]' || true)
             [ -z "$BRANCH" ] && { echo "BRANCH missing or empty"; exit 1; }
-
-            NOTES=$(awk 'BEGIN{f=0} /^NOTES=/{f=1; sub(/^NOTES=/,""); print; next} f' "$TEMP" || true)
+            
+            NOTES=$(echo "$CONTENT" | awk 'BEGIN{f=0} /^NOTES=/{f=1; sub(/^NOTES=/,""); print; next} f' || true)
             [ -z "$NOTES" ] && { echo "NOTES missing or empty"; exit 1; }
 
             # Set Params
