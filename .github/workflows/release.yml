@@ -15,6 +15,8 @@ jobs:
     runs-on: ubuntu-latest
     outputs:
       ver_name: ${{ steps.info.outputs.ver_name }}
+      short_sha: ${{ steps.sha.outputs.short_sha }}
+      final_tag: ${{ steps.final_tag.outputs.final_tag }}
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -22,30 +24,44 @@ jobs:
           submodules: recursive
           fetch-depth: 0
 
+      - name: Set Short SHA
+        id: sha
+        run: echo "short_sha=${GITHUB_SHA::7}" >> $GITHUB_OUTPUT
+
       - name: Parse RELEASE_INFO
         id: info
         run: |
           set -euxo pipefail
           INFO_FILE=RELEASE_INFO
-          if [ ! -s "$INFO_FILE" ]; then
-            echo "$INFO_FILE not found or empty"
-            exit 1
-          fi
+          [ -s "$INFO_FILE" ] || { echo "$INFO_FILE not found or empty"; exit 1; }
           VER=$(grep '^VER_NAME=' "$INFO_FILE" | cut -d'=' -f2- | tr -d '[:space:]')
           echo "ver_name=$VER" >> $GITHUB_OUTPUT
 
-      - name: Check Branch vs RELEASE_INFO
-        run: |
-          BRANCH=$(grep '^BRANCH=' RELEASE_INFO | cut -d'=' -f2- | tr -d '[:space:]')
-          CURRENT=$(git rev-parse --abbrev-ref HEAD)
-          if [ "$CURRENT" != "$BRANCH" ]; then
-            echo "Release configured for '$BRANCH', but current is '$CURRENT'"
-            exit 1
-          fi
+          PRERELEASE=$(grep '^PRERELEASE=' "$INFO_FILE" | cut -d= -f2- | tr -d '[:space:]' || true)
+          [ -z "$PRERELEASE" ] && PRERELEASE="true"
+          echo "prerelease=$PRERELEASE" >> $GITHUB_OUTPUT
 
-      - name: Check If Tag Exist
+      - name: Compute final tag name
+        id: final_tag
+        run: | 
+          RAW_TAG="${{ steps.info.outputs.ver_name }}"
+          PRERELEASE="${{ steps.info.outputs.prerelease }}"
+          SHORT_SHA="${{ steps.sha.outputs.short_sha }}"
+          if [ "$PRERELEASE" = "true" ]; then
+            echo "final_tag=${RAW_TAG}-${SHORT_SHA}" >> $GITHUB_OUTPUT
+          else
+            echo "final_tag=${RAW_TAG}" >> $GITHUB_OUTPUT
+          fi 
+          
+      - name: Check Branch
+        run: | 
+          BRANCH=$(grep '^BRANCH=' RELEASE_INFO | cut -d= -f2- | tr -d '[:space:]')
+          CURRENT=$(git rev-parse --abbrev-ref HEAD)
+          [ "$CURRENT" = "$BRANCH" ] || { echo "Release configured for '$BRANCH', but current is '$CURRENT'"; exit 1; }
+
+      - name: Check Tag Exist
         run: |
-          TAG="${{ steps.info.outputs.ver_name }}"
+          TAG="${{ steps.final_tag.outputs.final_tag }}"
           if git rev-parse "$TAG" >/dev/null 2>&1; then
             echo "Tag $TAG already exists"
             exit 1
@@ -53,9 +69,9 @@ jobs:
 
       - name: Create & Push Tag
         run: |
-          TAG="${{ steps.info.outputs.ver_name }}"
-          TITLE=$(grep '^TITLE=' RELEASE_INFO | cut -d'=' -f2- | sed 's/shortSHA/'${GITHUB_SHA::7}'/;s/^[[:space:]]*//;s/[[:space:]]*$//' || true)
-          [ -z "$TITLE" ] && TITLE="$TAG ${GITHUB_SHA::7}"
+          TAG="${{ steps.final_tag.outputs.final_tag }}"
+          TITLE=$(grep '^TITLE=' RELEASE_INFO | cut -d= -f2- | sed "s/shortSHA/${GITHUB_SHA::7}/;s/^[[:space:]]*//;s/[[:space:]]*$//" || true)
+          [ -z "$TITLE" ] && TITLE="$TAG"
           git config user.name  "github-actions"
           git config user.email "actions@github.com"
           git tag -a "$TAG" -m "$TITLE"
@@ -93,31 +109,28 @@ jobs:
           merge-multiple: true
           path: release_assets/
 
-      - name: Read Release Notes
-        id: notes
+      - name: Read Release Meta
+        id: meta
         run: |
           NOTES=$(awk 'BEGIN{f=0} /^NOTES=/{f=1; sub(/^NOTES=/,""); print; next} f' RELEASE_INFO)
           echo "notes<<EOF" >> $GITHUB_OUTPUT
           echo "$NOTES"     >> $GITHUB_OUTPUT
           echo "EOF"        >> $GITHUB_OUTPUT
 
-      - name: Extract Prerelease Flag
-        id: flag
-        run: |
-          PRERELEASE=$(grep '^PRERELEASE=' RELEASE_INFO | cut -d'=' -f2- | tr -d '[:space:]' || true)
+          PRERELEASE=$(grep '^PRERELEASE=' RELEASE_INFO | cut -d= -f2- | tr -d '[:space:]' || true)
           [ -z "$PRERELEASE" ] && PRERELEASE="true"
           echo "prerelease=$PRERELEASE" >> $GITHUB_OUTPUT
 
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v1
         with:
-          tag_name: ${{ needs.create_tag.outputs.ver_name }}
+          tag_name: ${{ needs.create_tag.outputs.final_tag }}
           name:     ${{ needs.create_tag.outputs.ver_name }}
-          body:     ${{ steps.notes.outputs.notes }}
+          body:     ${{ steps.meta.outputs.notes }}
           files:    release_assets/*
           draft:    false
-          prerelease: ${{ steps.flag.outputs.prerelease == 'true' }}
-          make_latest: ${{ steps.flag.outputs.prerelease != 'true' }}
+          prerelease: ${{ steps.meta.outputs.prerelease == 'true' }}
+          make_latest: ${{ steps.meta.outputs.prerelease != 'true' }}
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
