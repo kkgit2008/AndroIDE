@@ -72,6 +72,12 @@ jobs:
           TAG="${{ steps.final_tag.outputs.final_tag }}"
           TITLE=$(grep '^TITLE=' RELEASE_INFO | cut -d= -f2- | sed "s/shortSHA/${GITHUB_SHA::7}/;s/^[[:space:]]*//;s/[[:space:]]*$//" || true)
           [ -z "$TITLE" ] && TITLE="$TAG"
+          
+          echo ">>>VER_NAME:${{ steps.info.outputs.ver_name }}"
+          echo ">>>PRERELEASE:${{ steps.info.outputs.prerelease }}"
+          echo ">>>TAG:$TAG"
+          echo ">>>TITLE:$TITLE"
+          
           git config user.name  "github-actions"
           git config user.email "actions@github.com"
           git tag -a "$TAG" -m "$TITLE"
@@ -117,9 +123,9 @@ jobs:
           echo "$NOTES"     >> $GITHUB_OUTPUT
           echo "EOF"        >> $GITHUB_OUTPUT
 
-          PRERELEASE=$(grep '^PRERELEASE=' RELEASE_INFO | cut -d= -f2- | tr -d '[:space:]' || true)
-          [ -z "$PRERELEASE" ] && PRERELEASE="true"
-          echo "prerelease=$PRERELEASE" >> $GITHUB_OUTPUT
+          #PRERELEASE=$(grep '^PRERELEASE=' RELEASE_INFO | cut -d= -f2- | tr -d '[:space:]' || true)
+          #[ -z "$PRERELEASE" ] && PRERELEASE="true"
+          #echo "prerelease=$PRERELEASE" >> $GITHUB_OUTPUT
 
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v1
