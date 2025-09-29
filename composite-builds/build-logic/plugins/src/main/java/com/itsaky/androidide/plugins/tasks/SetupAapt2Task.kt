@@ -47,7 +47,8 @@ abstract class SetupAapt2Task : DefaultTask() {
     )
 
     private const val DEFAULT_VERSION = "34.0.4"
-    private const val AAPT2_DOWNLOAD_URL = "https://github.com/AndroidIDEOfficial/platform-tools/releases/download/v%1\$s/aapt2-%2\$s"
+//    private const val AAPT2_DOWNLOAD_URL = "https://github.com/kkgit2008/platform-tools/releases/download/v%1\$s/aapt2-%2\$s"
+    private const val AAPT2_DOWNLOAD_URL = "https://github.com/kkgit2008/AndroIDE/releases/download/SDK/aapt2-%1\$s-%2\$s"
   }
 
   @TaskAction
