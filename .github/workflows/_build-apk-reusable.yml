@@ -170,8 +170,6 @@ jobs:
             echo "  notes len : $(echo -n "$NOTES" | wc -c)"
           fi
 
-          rm -f "$TEMP"
-
       # ---------- JDK & Gradle ----------
       - name: Set Up JDK
         uses: actions/setup-java@v4
