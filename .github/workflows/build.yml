@@ -28,5 +28,4 @@ jobs:
     with:
       abi_type:   ${{ matrix.abi_type }}
       build_type: ${{ matrix.build_type }}
-      # Params read by _build-apk-reusable.yml
 
