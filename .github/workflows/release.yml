@@ -102,7 +102,7 @@ jobs:
       abi_type:   ${{ matrix.abi_type }}
       build_type: release
       override_IsPublish: true
-      # 把 check  job 已解析的字段显式传过去
+      # pass params from 'check' job
       override_ver_name:   ${{ needs.check.outputs.ver_name }}
       override_short_sha:  ${{ needs.check.outputs.short_sha }}
       override_title:      ${{ needs.check.outputs.title }}
