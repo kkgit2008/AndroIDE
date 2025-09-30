@@ -24,17 +24,40 @@ on:
         required: true
         type: string
       
-      # Optional input parameters
+      # Optional input parameters (has default value)
       
-      override_info_file:
-        description: 'path to INFO_FILE (repo root relative)'
-        required: false
-        default: 'RELEASE_INFO'
-        type: string
       override_IsPublish:
         description: 'whether is publishing'
         required: false
         default: "false"
+        type: string
+      override_info_file:
+        description: 'path to $INFO_FILE (repo root relative)'
+        required: false
+        default: 'RELEASE_INFO'
+        type: string
+      
+      # Optional input parameters (no default value)
+      
+      override_ver_name:
+        description: ''
+        required: false
+        type: string
+      override_short_sha:
+        description: ''
+        required: false
+        type: string
+      override_title:
+        description: ''
+        required: false
+        type: string
+      override_branch:
+        description: ''
+        required: false
+        type: string
+      override_prerelease:
+        description: ''
+        required: false
         type: string
 
     outputs:
@@ -85,10 +108,11 @@ env:
 jobs:
   build:
     name: Build APK (${{ inputs.abi_type }},${{ inputs.build_type }})
-    runs-on: ubuntu-latest
+    #runs-on: ubuntu-latest
+    runs-on: ${{ fromJSON('["ubuntu-latest", "self-hosted"]')[github.repository == 'github/docs-internal'] }}
     outputs:
       ver_name:  ${{ steps.info.outputs.ver_name }}
-      short_sha:  ${{ steps.sha.outputs.short_sha }}
+      short_sha:  ${{ steps.info.outputs.short_sha }}
       title:      ${{ steps.info.outputs.title }}
       branch:     ${{ steps.info.outputs.branch }}
       prerelease: ${{ steps.info.outputs.prerelease }}
@@ -103,53 +127,77 @@ jobs:
           # Only Read The Last 1 Commit
           fetch-depth: 1
 
-      - name: Set Short SHA
-        id: sha
-        run: echo "short_sha=${GITHUB_SHA::7}" >> $GITHUB_OUTPUT
-
       - name: Read & Parse INFO_FILE
         id: info
         shell: bash
         run: |
           set -euo pipefail
           INFO_FILE="${{ inputs.override_info_file }}"
-          #[ -s "$INFO_FILE" ] || { echo "$INFO_FILE not found or empty"; exit 1; }
-
+          
           # Read file
-          CONTENT=$(sed "s/shortSHA/${{ steps.sha.outputs.short_sha }}/g" "$INFO_FILE")
+          CONTENT=$(sed "s/shortSHA/${GITHUB_SHA::7}/g" "$INFO_FILE")
 
           # --------------- Common ---------------
           
-          VER_NAME=$(echo "$CONTENT" | grep '^VER_NAME=' | cut -d= -f2- | tr -d '[:space:]')
-          [ -z "$VER_NAME" ] && { echo "VER_NAME missing"; exit 1; }
-
+          VER_NAME="${{ inputs.override_ver_name }}"
+          if [ -z "$VER_NAME" ]; then
+            VER_NAME=$(echo "$CONTENT" | grep '^VER_NAME=' | cut -d= -f2- | tr -d '[:space:]')
+            if [ -z "$VER_NAME" ]; then
+              echo "VER_NAME missing or empty"
+              exit 1
+            fi
+          fi
+          echo "ver_name=$VER_NAME"      >> $GITHUB_OUTPUT
+          
           if [ "${{ inputs.override_IsPublish }}" == "true" ]; then
             VER_SUFFIX=""
           elif [ "${{ inputs.build_type }}" == "release" ]; then
-            VER_SUFFIX=-dev-"${{ steps.sha.outputs.short_sha }}"
+            VER_SUFFIX=-dev-"$SHA"
           else
-            VER_SUFFIX=-devDebug-"${{ steps.sha.outputs.short_sha }}"
+            VER_SUFFIX=-devDebug-"$SHA"
           fi
+          echo "ver_suffix=$VER_SUFFIX" >> $GITHUB_OUTPUT
+          
+          SHA="${{ inputs.override_short_sha }}"
+          if [ -z "$SHA" ]; then
+            SHA="${GITHUB_SHA::7}"
+          fi
+          echo "short_sha=$SHA" >> $GITHUB_OUTPUT
           
           # --------------- Publish Only ---------------
           if [ "${{ inputs.override_IsPublish }}" == "true" ]; then
-            TITLE_SUFFIX=" ${{ steps.sha.outputs.short_sha }}"
-            TITLE=$(echo "$CONTENT" | grep '^TITLE=' | cut -d= -f2- | sed 's/^[[:space:]]*//;s/[[:space:]]*$//' || true)
-            [ -z "$TITLE" ] && TITLE="${VER_NAME}${TITLE_SUFFIX}"
-
-            PRERELEASE=$(echo "$CONTENT" | grep '^PRERELEASE=' | cut -d= -f2- | tr -d '[:space:]' || true)
-            [ -z "$PRERELEASE" ] && PRERELEASE="true"
+          
+            TITLE_SUFFIX=" $SHA"
+            TITLE="${{ inputs.override_title }}"
+            if [ -z "$TITLE" ]; then
+              TITLE=$(echo "$CONTENT" | grep '^TITLE=' | cut -d= -f2- | tr -d '[:space:]')
+              if [ -z "$TITLE" ]; then
+                TITLE="${VER_NAME}${TITLE_SUFFIX}"
+              fi
+            fi
+            echo "title=$TITLE"      >> $GITHUB_OUTPUT
             
-            BRANCH=$(echo "$CONTENT" | grep '^BRANCH=' | cut -d= -f2- | tr -d '[:space:]' || true)
-            [ -z "$BRANCH" ] && { echo "BRANCH missing or empty"; exit 1; }
+            BRANCH="${{ inputs.override_branch }}"
+            if [ -z "$BRANCH" ]; then
+              BRANCH=$(echo "$CONTENT" | grep '^BRANCH=' | cut -d= -f2- | tr -d '[:space:]')
+              if [ -z "$BRANCH" ]; then
+                echo "BRANCH missing or empty"
+                exit 1
+              fi
+            fi
+            echo "branch=$BRANCH"      >> $GITHUB_OUTPUT
+
+            PRERELEASE="${{ inputs.override_prerelease }}"
+            if [ -z "$PRERELEASE" ]; then
+              PRERELEASE=$(echo "$CONTENT" | grep '^PRERELEASE=' | cut -d= -f2- | tr -d '[:space:]')
+              if [ -z "$PRERELEASE" ]; then
+                PRERELEASE="true"
+              fi
+            fi
+            echo "prerelease=$PRERELEASE"      >> $GITHUB_OUTPUT
             
             NOTES=$(echo "$CONTENT" | awk 'BEGIN{f=0} /^NOTES=/{f=1; sub(/^NOTES=/,""); print; next} f' || true)
             [ -z "$NOTES" ] && { echo "NOTES missing or empty"; exit 1; }
-
-            # Set Params
-            echo "title=$TITLE"      >> $GITHUB_OUTPUT
-            echo "branch=$BRANCH"    >> $GITHUB_OUTPUT
-            echo "prerelease=$PRERELEASE" >> $GITHUB_OUTPUT
             
             # Write File Safely
             echo "notes<<EOF" >> $GITHUB_OUTPUT
@@ -157,13 +205,11 @@ jobs:
             echo "EOF"        >> $GITHUB_OUTPUT
           fi
 
-          echo "ver_name=$VER_NAME"     >> $GITHUB_OUTPUT
-          echo "ver_suffix=$VER_SUFFIX" >> $GITHUB_OUTPUT
-
           # ---------- Print Params ----------
           echo ">>>> $INFO_FILE parsed:"
           echo "  ver_name : $VER_NAME"
           echo "  ver_suffix: $VER_SUFFIX"
+          echo "  short_sha: $SHA"
           
           if [ "${{ inputs.override_IsPublish }}" == "true" ]; then
             echo "  title    : $TITLE"
@@ -171,7 +217,7 @@ jobs:
             echo "  prerelease: $PRERELEASE"
             echo "  notes len : $(echo -n "$NOTES" | wc -c)"
           fi
-
+          
       # ---------- JDK & Gradle ----------
       - name: Set Up JDK
         uses: actions/setup-java@v4
@@ -226,6 +272,6 @@ jobs:
         if: ${{ inputs.build_type == 'release' }}
         uses: actions/upload-artifact@v4
         with:
-          name: release-mappings-${{ steps.sha.outputs.short_sha }}
+          name: release-mappings-${{ steps.info.outputs.short_sha }}
           path: '**/build/outputs/mapping'
 
