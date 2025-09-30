@@ -1,7 +1,7 @@
 
 # ===================================================================
 #  Reusable : Can build all ABI/build-type and upload APK + mapping
-#  Read file RELEASE_INFO and get params：
+#  Read $INFO_FILE and get params：
 #    - VER_NAME          （Required）
 #    - TITLE / BRANCH / PRERELEASE / NOTES  (Only read when publish)
 # ===================================================================
@@ -27,7 +27,7 @@ on:
       # Optional input parameters
       
       override_info_file:
-        description: 'path to RELEASE_INFO (repo root relative)'
+        description: 'path to INFO_FILE (repo root relative)'
         required: false
         default: 'RELEASE_INFO'
         type: string
@@ -133,8 +133,9 @@ jobs:
           
           # --------------- Publish Only ---------------
           if [ "${{ inputs.override_IsPublish }}" == "true" ]; then
+            TITLE_SUFFIX=" ${{ steps.sha.outputs.short_sha }}"
             TITLE=$(echo "$CONTENT" | grep '^TITLE=' | cut -d= -f2- | sed 's/^[[:space:]]*//;s/[[:space:]]*$//' || true)
-            [ -z "$TITLE" ] && TITLE="${VER_NAME} ${{ steps.sha.outputs.short_sha }}"
+            [ -z "$TITLE" ] && TITLE="${VER_NAME}${TITLE_SUFFIX}"
 
             PRERELEASE=$(echo "$CONTENT" | grep '^PRERELEASE=' | cut -d= -f2- | tr -d '[:space:]' || true)
             [ -z "$PRERELEASE" ] && PRERELEASE="true"
@@ -160,9 +161,10 @@ jobs:
           echo "ver_suffix=$VER_SUFFIX" >> $GITHUB_OUTPUT
 
           # ---------- Print Params ----------
-          echo ">>>> RELEASE_INFO parsed:"
+          echo ">>>> $INFO_FILE parsed:"
           echo "  ver_name : $VER_NAME"
           echo "  ver_suffix: $VER_SUFFIX"
+          
           if [ "${{ inputs.override_IsPublish }}" == "true" ]; then
             echo "  title    : $TITLE"
             echo "  branch   : $BRANCH"
