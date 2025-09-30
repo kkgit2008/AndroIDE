@@ -26,6 +26,7 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
         with:
+          # get entire commit history to compare tag
           fetch-depth: 0
 
       - name: Set Short SHA
@@ -119,6 +120,7 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
         with:
+          # just need the latest commit history
           fetch-depth: 1
 
       - name: Create & Push Tag
