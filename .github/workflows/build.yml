@@ -16,16 +16,36 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
+  read_info:
+    #runs-on: ubuntu-latest
+    runs-on: ${{ fromJSON('["ubuntu-latest", "self-hosted"]')[github.repository == 'github/docs-internal'] }}
+    outputs:
+      ver_name: ${{ steps.info.outputs.ver_name }}
+    steps:
+    
+      - name: Checkout
+        uses: actions/checkout@v4
+        
+      - name: Extract VER_NAME
+        id: info
+        run: |
+          VER_NAME=$(grep '^VER_NAME=' RELEASE_INFO | cut -d= -f2- | tr -d '[:space:]')
+          [ -z "$VER_NAME" ] && { echo "$VER_NAME missing or empty"; exit 1; }
+          echo "ver_name=$VER_NAME" >> $GITHUB_OUTPUT
+
   build_matrix:
+    needs: read_info
     strategy:
       fail-fast: false
       matrix:
         abi_type: ['arm64-v8a']
         #abi_type: ['arm64-v8a', 'armeabi-v7a', 'x86_64']
-        build_type: ['release']
-        #build_type: ['release', 'debug']
+        #build_type: ['release']
+        build_type: ['release', 'debug']
     uses: ./.github/workflows/_build-apk-reusable.yml
     with:
       abi_type:   ${{ matrix.abi_type }}
       build_type: ${{ matrix.build_type }}
+      override_ver_name: ${{ needs.read_info.outputs.ver_name }}
+      override_releaseOrBuild: false
 
