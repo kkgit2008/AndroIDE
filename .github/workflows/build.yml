@@ -17,8 +17,9 @@ concurrency:
 
 jobs:
   read_info:
-    #runs-on: ubuntu-latest
-    runs-on: ${{ fromJSON('["ubuntu-latest", "self-hosted"]')[github.repository == 'github/docs-internal'] }}
+    timeout-minutes: 10  # Force timeout after this
+    runs-on: ubuntu-latest
+    
     outputs:
       ver_name: ${{ steps.info.outputs.ver_name }}
     steps:
