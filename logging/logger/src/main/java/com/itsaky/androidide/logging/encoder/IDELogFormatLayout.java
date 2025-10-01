@@ -45,7 +45,7 @@ public class IDELogFormatLayout extends LayoutBase<ILoggingEvent> {
 
   @Override
   public String doLayout(ILoggingEvent event) {
-    final SimpleDateFormat format = new SimpleDateFormat("dd-MM HH:mm:ss.SSS", Locale.ROOT);
+    final SimpleDateFormat format = new SimpleDateFormat("MM-dd HH:mm:ss.SSS", Locale.ROOT);
     final var date = format.format(new Date(event.getTimeStamp()));
 
     final var builder = new StringBuilder();
