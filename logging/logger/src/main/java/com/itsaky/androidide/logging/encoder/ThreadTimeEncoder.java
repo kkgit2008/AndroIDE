@@ -40,7 +40,7 @@ public class ThreadTimeEncoder extends EncoderBase<ILoggingEvent> {
   @Override
   public byte[] encode(ILoggingEvent event) {
     final var sb = new StringBuilder();
-    final var date = new SimpleDateFormat("dd-MM HH:mm:ss.SSS", Locale.ROOT).format(
+    final var date = new SimpleDateFormat("MM-dd HH:mm:ss.SSS", Locale.ROOT).format(
         new Date(event.getTimeStamp()));
     var tag = event.getLoggerName();
     if (tag.length() > LogUtils.MAX_TAG_LENGTH) {
