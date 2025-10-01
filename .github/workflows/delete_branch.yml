@@ -10,6 +10,7 @@ on:
 
 jobs:
   delete:
+    timeout-minutes: 5  # Force timeout after this
     runs-on: ubuntu-latest
     permissions:
       contents: write
