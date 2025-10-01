@@ -64,8 +64,9 @@ env:
 jobs:
   build:
     name: Build APK (${{ inputs.abi_type }},${{ inputs.build_type }})
-    #runs-on: ubuntu-latest
-    runs-on: ${{ fromJSON('["ubuntu-latest", "self-hosted"]')[github.repository == 'github/docs-internal'] }}
+    timeout-minutes: 30  # Force timeout after this
+    runs-on: ubuntu-latest
+    
     outputs:
       ver_name:    ${{ steps.params.outputs.ver_name }}
       short_sha:    ${{ steps.params.outputs.short_sha }}
