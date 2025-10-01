@@ -45,7 +45,7 @@ import org.gradle.api.provider.Provider
 
 ////The "mapIndex" affects the version code of apk.
 //internal val flavorsAbis = mapOf("armeabi-v7a" to 1, "arm64-v8a" to 2, "x86_64" to 3)
-internal val flavorsAbis = mapOf("arm64-v8a" to 4)
+internal val flavorsAbis = mapOf("arm64-v8a" to 5)
 
 fun Project.configureAndroidModule(
   coreLibDesugDep: Provider<MinimalExternalModuleDependency>
