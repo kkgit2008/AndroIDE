@@ -4,7 +4,7 @@
 
 * Fork this repo.
 
-* Run action 'Build APK' ~~(only on 'main' branch)~~
+* Run action 'Build APK'
 
 * If you want, you can edit app version code from 
 <a href="./composite-builds/build-logic/common/src/main/java/com/itsaky/androidide/build/config/ProjectConfig.kt"> here </a> at line 118
@@ -12,7 +12,6 @@
 * Or, to build all architectures from 
 <a href="./composite-builds/build-logic/plugins/src/main/java/com/itsaky/androidide/plugins/conf/AndroidModuleConf.kt"> here </a> at line 48
 
-> ~~BTW, app version name depends on the latest tag ('pre-release' tag is not included)~~
 
 
 <p> </p>
