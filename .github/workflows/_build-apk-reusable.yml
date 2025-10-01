@@ -1,20 +1,13 @@
-
 # ===================================================================
 #  Reusable : Can build all ABI/build-type and upload APK + mapping
-#  Read $INFO_FILE and get params：
-#    - VER_NAME          （Required）
-#    - TITLE / BRANCH / PRERELEASE / NOTES  (Only read when publish)
+#  NO LONGER reads $INFO_FILE —— all params come from caller inputs
 # ===================================================================
-
-
 
 name: --- Reusable Action ---
 
 on:
   workflow_call:
-  
     inputs:
-    
       abi_type:
         description: 'e.g. arm64-v8a'
         required: true
@@ -23,27 +16,21 @@ on:
         description: 'debug or release'
         required: true
         type: string
-      
+
       # Optional input parameters (has default value)
-      
-      override_IsPublish:
+      override_releaseOrBuild:
         description: 'whether is publishing'
         required: false
         default: "false"
         type: string
       override_info_file:
-        description: 'path to $INFO_FILE (repo root relative)'
+        description: 'path to $INFO_FILE (repo root relative) – kept for compatibility, NOT read'
         required: false
         default: 'RELEASE_INFO'
         type: string
-      
+
       # Optional input parameters (no default value)
-      
       override_ver_name:
-        description: ''
-        required: false
-        type: string
-      override_short_sha:
         description: ''
         required: false
         type: string
@@ -59,26 +46,10 @@ on:
         description: ''
         required: false
         type: string
-
-    outputs:
-      ver_name:
-        description: 'parsed or overridden VER_NAME'
-        value: ${{ jobs.build.outputs.ver_name }}
-      short_sha:
-        description: 'short SHA of the run'
-        value: ${{ jobs.build.outputs.short_sha }}
-      title:
-        description: 'parsed or overridden TITLE (Publish only)'
-        value: ${{ jobs.build.outputs.title }}
-      branch:
-        description: 'parsed BRANCH (release only)'
-        value: ${{ jobs.build.outputs.branch }}
-      prerelease:
-        description: 'parsed or overridden PRERELEASE (Publish only)'
-        value: ${{ jobs.build.outputs.prerelease }}
-      notes:
-        description: 'parsed NOTES (Publish only)'
-        value: ${{ jobs.build.outputs.notes }}
+      override_notes:
+        description: 'release notes body (publish only)'
+        required: false
+        type: string
 
 env:
   # Output configuration
@@ -90,135 +61,69 @@ env:
   IDE_SIGNING_KEY_PASS: android
   IDE_SIGNING_STORE_PASS: android
 
-
-  #IDE_SIGNING_AUTH_PASS: ${{ secrets.IDE_SIGNING_AUTH_PASS }}
-  #IDE_SIGNING_AUTH_USER: ${{ secrets.IDE_SIGNING_AUTH_USER }}
-  #IDE_SIGNING_URL: ${{ secrets.IDE_SIGNING_URL }}
-  #IDE_SIGNING_KEY_BIN: ${{ secrets.IDE_SIGNING_KEY_BIN }}
-  ### Publishing credentials
-  #ORG_GRADLE_PROJECT_mavenCentralUsername: ${{ secrets.MVN_USERNAME }}
-  #ORG_GRADLE_PROJECT_mavenCentralPassword: ${{ secrets.MVN_PASSWORD }}
-  #ORG_GRADLE_PROJECT_signingInMemoryKey: ${{ secrets.MVN_SIGNING_KEY }}
-  #ORG_GRADLE_PROJECT_signingInMemoryKeyId: ${{ secrets.MVN_SIGNING_KEY_ID }}
-  #ORG_GRADLE_PROJECT_signingInMemoryKeyPassword: ${{ secrets.MVN_SIGNING_KEY_PASSWORD }}
-  ### Build configuration
-  #BUILD_IS_RELEASE: ${{ github.ref == 'refs/heads/main' || github.ref == 'refs/heads/release/**' }}
-  #ReleaseAndroidIDE: ${{ github.ref == 'refs/heads/main' }}
-
 jobs:
   build:
     name: Build APK (${{ inputs.abi_type }},${{ inputs.build_type }})
     #runs-on: ubuntu-latest
     runs-on: ${{ fromJSON('["ubuntu-latest", "self-hosted"]')[github.repository == 'github/docs-internal'] }}
     outputs:
-      ver_name:  ${{ steps.info.outputs.ver_name }}
-      short_sha:  ${{ steps.info.outputs.short_sha }}
-      title:      ${{ steps.info.outputs.title }}
-      branch:     ${{ steps.info.outputs.branch }}
-      prerelease: ${{ steps.info.outputs.prerelease }}
-      notes:      ${{ steps.info.outputs.notes }}
+      ver_name:    ${{ steps.params.outputs.ver_name }}
+      short_sha:    ${{ steps.params.outputs.short_sha }}
+      title:    ${{ steps.params.outputs.title }}
+      branch:    ${{ steps.params.outputs.branch }}
+      prerelease:    ${{ steps.params.outputs.prerelease }}
+      notes:    ${{ steps.params.outputs.notes }}
 
     steps:
-    
-      - name: Checkout Code
-        uses: actions/checkout@v4
-        with:
-          submodules: recursive
-          # Only Read The Last 1 Commit
-          fetch-depth: 1
-
-      - name: Read & Parse INFO_FILE
-        id: info
+      # ---------- 0. get caller inputs ----------
+      - name: Export caller inputs
+        id: params
         shell: bash
         run: |
-          set -euo pipefail
-          INFO_FILE="${{ inputs.override_info_file }}"
-          
-          SHA="${{ inputs.override_short_sha }}"
-          if [ -z "$SHA" ]; then
-            SHA="${GITHUB_SHA::7}"
-          fi
-          echo "short_sha=$SHA" >> $GITHUB_OUTPUT
-          
-          # Read file
-          CONTENT=$(sed "s/shortSHA/${GITHUB_SHA::7}/g" "$INFO_FILE")
+          # ---- Common ----
+          VER_NAME='${{ inputs.override_ver_name }}'
+          #[ -z "$VER_NAME" ] && { echo "$VER_NAME missing or empty"; exit 1; }
+          SHA="${GITHUB_SHA::7}"
+          echo "ver_name=$VER_NAME"  >> $GITHUB_OUTPUT
+          echo "short_sha=$SHA"      >> $GITHUB_OUTPUT
 
-          # --------------- Common ---------------
-          
-          VER_NAME="${{ inputs.override_ver_name }}"
-          if [ -z "$VER_NAME" ]; then
-            VER_NAME=$(echo "$CONTENT" | grep '^VER_NAME=' | cut -d= -f2- | tr -d '[:space:]')
-            if [ -z "$VER_NAME" ]; then
-              echo "VER_NAME missing or empty"
-              exit 1
-            fi
-          fi
-          echo "ver_name=$VER_NAME"      >> $GITHUB_OUTPUT
-          
-          if [ "${{ inputs.override_IsPublish }}" == "true" ]; then
+          PRERELEASE='${{ inputs.override_prerelease }}'
+          echo "prerelease=$PRERELEASE" >> $GITHUB_OUTPUT
+
+          if [ "$PRERELEASE" = "false" ]; then
             VER_SUFFIX=""
-          elif [ "${{ inputs.build_type }}" == "release" ]; then
-            VER_SUFFIX=-dev-"$SHA"
+          elif [ '${{ inputs.build_type }}' = "release" ]; then
+            VER_SUFFIX="-dev-$SHA"
           else
-            VER_SUFFIX=-devDebug-"$SHA"
+            VER_SUFFIX="-devDebug-$SHA"
           fi
           echo "ver_suffix=$VER_SUFFIX" >> $GITHUB_OUTPUT
-          
-          # --------------- Publish Only ---------------
-          if [ "${{ inputs.override_IsPublish }}" == "true" ]; then
-          
-            TITLE_SUFFIX=" $SHA"
-            TITLE="${{ inputs.override_title }}"
-            if [ -z "$TITLE" ]; then
-              TITLE=$(echo "$CONTENT" | grep '^TITLE=' | cut -d= -f2- | tr -d '[:space:]')
-              if [ -z "$TITLE" ]; then
-                TITLE="${VER_NAME}${TITLE_SUFFIX}"
-              fi
-            fi
-            echo "title=$TITLE"      >> $GITHUB_OUTPUT
-            
-            BRANCH="${{ inputs.override_branch }}"
-            if [ -z "$BRANCH" ]; then
-              BRANCH=$(echo "$CONTENT" | grep '^BRANCH=' | cut -d= -f2- | tr -d '[:space:]')
-              if [ -z "$BRANCH" ]; then
-                echo "BRANCH missing or empty"
-                exit 1
-              fi
-            fi
-            echo "branch=$BRANCH"      >> $GITHUB_OUTPUT
 
-            PRERELEASE="${{ inputs.override_prerelease }}"
-            if [ -z "$PRERELEASE" ]; then
-              PRERELEASE=$(echo "$CONTENT" | grep '^PRERELEASE=' | cut -d= -f2- | tr -d '[:space:]')
-              if [ -z "$PRERELEASE" ]; then
-                PRERELEASE="true"
-              fi
-            fi
-            echo "prerelease=$PRERELEASE"      >> $GITHUB_OUTPUT
-            
-            NOTES=$(echo "$CONTENT" | awk 'BEGIN{f=0} /^NOTES=/{f=1; sub(/^NOTES=/,""); print; next} f' || true)
-            [ -z "$NOTES" ] && { echo "NOTES missing or empty"; exit 1; }
-            
-            # Write File Safely
+          # ---- Publish Only ----
+          if [ '${{ inputs.override_releaseOrBuild }}' = "true" ]; then
+            TITLE='${{ inputs.override_title }}'
+            #[ -z "$TITLE" ] && TITLE="${VER_NAME} dev$(date +%Y%m%d)"
+            echo "title=$TITLE" >> $GITHUB_OUTPUT
+
+            BRANCH='${{ inputs.override_branch }}'
+            #[ -z "$BRANCH" ] && { echo "BRANCH missing or empty"; exit 1; }
+            echo "branch=$BRANCH" >> $GITHUB_OUTPUT
+
+            NOTES='${{ inputs.override_notes }}'
+            #[ -z "$NOTES" ] && { echo "NOTES missing or empty"; exit 1; }
             echo "notes<<EOF" >> $GITHUB_OUTPUT
             echo "$NOTES"     >> $GITHUB_OUTPUT
             echo "EOF"        >> $GITHUB_OUTPUT
           fi
 
-          # ---------- Print Params ----------
-          echo ">>>> $INFO_FILE parsed:"
-          echo "  ver_name : $VER_NAME"
-          echo "  ver_suffix: $VER_SUFFIX"
-          echo "  short_sha: $SHA"
-          
-          if [ "${{ inputs.override_IsPublish }}" == "true" ]; then
-            echo "  title    : $TITLE"
-            echo "  branch   : $BRANCH"
-            echo "  prerelease: $PRERELEASE"
-            echo "  notes len : $(echo -n "$NOTES" | wc -c)"
-          fi
-          
-      # ---------- JDK & Gradle ----------
+      # ---------- 1. checkout ----------
+      - name: Checkout Code
+        uses: actions/checkout@v4
+        with:
+          submodules: recursive
+          fetch-depth: 1
+
+      # ---------- 2. JDK & Gradle ----------
       - name: Set Up JDK
         uses: actions/setup-java@v4
         with:
@@ -239,39 +144,40 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-gradle-
 
-      # ---------- Build APK ----------
+      # ---------- 3. build ----------
       - name: Build ${{ inputs.build_type }} APK
         run: |
           ./gradlew :core:app:assemble${{ inputs.build_type }} \
-            -PversionSuffix="${{ steps.info.outputs.ver_suffix }}" \
-            -PbaseVersion="${{ steps.info.outputs.ver_name }}"
+            -PversionSuffix="${{ steps.params.outputs.ver_suffix }}" \
+            -PbaseVersion="${{ steps.params.outputs.ver_name }}"
 
       - name: Show APK_OUTPUT_DIR
         run: ls -laR ${{ env.APK_OUTPUT_DIR }}
 
-      # ---------- Copy & Rename Files----------
+      # ---------- 4. get artifact ----------
       - name: Copy & Rename APK
         run: |
           mkdir -p ${{ env.ARTIFACT_OUTPUT_DIR }}${{ inputs.abi_type }}
-          SRC=${{ env.APK_OUTPUT_DIR }}${{ inputs.build_type }}/app-${{ inputs.abi_type }}-${{ inputs.build_type }}.apk
-          DST=${{ env.ARTIFACT_OUTPUT_DIR }}${{ inputs.abi_type }}/AndroIDE-${{ inputs.abi_type }}-${{ steps.info.outputs.ver_name }}${{ steps.info.outputs.ver_suffix }}.apk
+          SRC=$(find "$APK_OUTPUT_DIR" -name "app-${{ inputs.abi_type }}-${{ inputs.build_type }}.apk" | head -n 1)
+          [ -z "$SRC" ] && { echo "APK file not found (abi: ${{ inputs.abi_type }}, build: ${{ inputs.build_type }}) at path:$APK_OUTPUT_DIR"; exit 1; }
+          #SRC=${{ env.APK_OUTPUT_DIR }}${{ inputs.build_type }}/app-${{ inputs.abi_type }}-${{ inputs.build_type }}.apk
+          DST=${{ env.ARTIFACT_OUTPUT_DIR }}${{ inputs.abi_type }}/AndroIDE-${{ inputs.abi_type }}-${{ steps.params.outputs.ver_name }}${{ steps.params.outputs.ver_suffix }}.apk
           cp "$SRC" "$DST"
           sha256sum "$DST" > "$DST.sha256"
 
       - name: Show Artifact Tree
         run: ls -laR ${{ env.ARTIFACT_OUTPUT_DIR }}
 
-      # ---------- Upload Files ----------
+      # ---------- 5. upload ----------
       - name: Upload APK Artifact
         uses: actions/upload-artifact@v4
         with:
-          name: AndroIDE-${{ inputs.abi_type }}-${{ steps.info.outputs.ver_name }}${{ steps.info.outputs.ver_suffix }}
+          name: AndroIDE-${{ inputs.abi_type }}-${{ steps.params.outputs.ver_name }}${{ steps.params.outputs.ver_suffix }}
           path: ${{ env.ARTIFACT_OUTPUT_DIR }}${{ inputs.abi_type }}/*
 
-      - name: Upload Mapping (release only, not debug)
+      - name: Upload Mapping (release only)
         if: ${{ inputs.build_type == 'release' }}
         uses: actions/upload-artifact@v4
         with:
-          name: release-mappings-${{ steps.info.outputs.short_sha }}
+          name: release-mappings-${{ steps.params.outputs.short_sha }}
           path: '**/build/outputs/mapping'
-
