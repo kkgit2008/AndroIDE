@@ -169,7 +169,25 @@ class QuickRunWithCancellationAction(context: Context, override val order: Int) 
 
       handleResult(data, result, module, variant)
     }.invokeOnCompletion { error ->
-      if (error != null) {
+
+        when {
+            error == null -> return@invokeOnCompletion
+            error is java.util.concurrent.CancellationException -> {
+            // 1. when cancel -> debug
+                log.debug(
+                    "QuickRun cancelled. type: {}, Message: {}",
+                    error?.javaClass?.name ?: "Unknown error type",
+                    error?.message ?: "No error message",
+                    //error.javaClass.simpleName,
+                    //error.message ?: "No message"
+                )
+                return@invokeOnCompletion
+            }
+            // 2. else -> continue
+            else -> Unit
+        }
+    
+      //if (error != null) {
         //log.error("Failed to run '{}'", taskName, error)
         log.error(
             "Failed to run task '{}'. Error type: {}, Message: {}",
@@ -178,7 +196,7 @@ class QuickRunWithCancellationAction(context: Context, override val order: Int) 
             error?.message ?: "No error message",
             error
         )
-      }
+      //}
     }
   }
 
