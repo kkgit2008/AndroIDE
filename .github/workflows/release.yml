@@ -10,8 +10,9 @@ concurrency:
 
 jobs:
   check:
-    #runs-on: ubuntu-latest
-    runs-on: ${{ fromJSON('["ubuntu-latest", "self-hosted"]')[github.repository == 'github/docs-internal'] }}
+    timeout-minutes: 20  # Force timeout after this
+    runs-on: ubuntu-latest
+    
     outputs:
       final_tag:  ${{ steps.final_tag.outputs.final_tag }}
       ver_name:   ${{ steps.info.outputs.ver_name }}
@@ -116,8 +117,9 @@ jobs:
 
   create_tag:
     needs: [check, build_all_abi]
-    #runs-on: ubuntu-latest
-    runs-on: ${{ fromJSON('["ubuntu-latest", "self-hosted"]')[github.repository == 'github/docs-internal'] }}
+    timeout-minutes: 10  # Force timeout after this
+    runs-on: ubuntu-latest
+    
     steps:
     
       - name: Checkout
@@ -135,8 +137,9 @@ jobs:
 
   publish_release:
     needs: [check, build_all_abi, create_tag]
-    #runs-on: ubuntu-latest
-    runs-on: ${{ fromJSON('["ubuntu-latest", "self-hosted"]')[github.repository == 'github/docs-internal'] }}
+    timeout-minutes: 10  # Force timeout after this
+    runs-on: ubuntu-latest
+    
     steps:
     
       - name: Checkout
