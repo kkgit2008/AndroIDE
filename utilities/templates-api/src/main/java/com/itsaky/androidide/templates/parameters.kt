@@ -374,7 +374,7 @@ inline fun projectNameParameter(crossinline configure: StringParameterBuilder.()
 inline fun packageNameParameter(crossinline configure: StringParameterBuilder.() -> Unit = {}) =
   stringParameter {
     name = string.package_name
-    default = "com.example.myapplication"
+    default = "com.ide.app"
     startIcon = { R.drawable.ic_package }
     constraints = listOf(NONEMPTY, PACKAGE)
 
