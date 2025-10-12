@@ -30,7 +30,8 @@ class StatisticsFragment : OnboardingFragment() {
 
   override fun createContentView(parent: ViewGroup, attachToParent: Boolean) {
     _content = LayoutOnboardingStatisticsBinding.inflate(layoutInflater, parent, attachToParent)
-    content.statOptIn.isChecked = true
+//    content.statOptIn.isChecked = true
+    content.statOptIn.isChecked = false
   }
 
   override fun onDestroy() {

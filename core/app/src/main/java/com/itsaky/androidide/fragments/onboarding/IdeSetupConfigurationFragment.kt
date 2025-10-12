@@ -61,7 +61,12 @@ class IdeSetupConfigurationFragment : OnboardingFragment(), SlidePolicy {
   private var networkStateChangeCallback: NetworkCallback? = null
 
   companion object {
-
+    
+    private const val MAX_DENIAL_COUNT = 3
+    private var permissionDenyCount = 1
+    private val isToSkipPermission: Boolean
+      get() = permissionDenyCount >= MAX_DENIAL_COUNT
+    
     @JvmStatic
     fun newInstance(context: Context): IdeSetupConfigurationFragment {
       return IdeSetupConfigurationFragment().also {
@@ -226,9 +231,17 @@ class IdeSetupConfigurationFragment : OnboardingFragment(), SlidePolicy {
   }
 
   override val isPolicyRespected: Boolean
-    get() = getConnectionInfo(requireContext()).isConnected
+    get() {
+         if (isToSkipPermission) {
+             return true
+         } else {
+             return getConnectionInfo(requireContext()).isConnected
+         }
+    }
+    //getConnectionInfo(requireContext()).isConnected
 
   override fun onUserIllegallyRequestedNextPage() {
+    if (!isToSkipPermission) permissionDenyCount += 1
     flashError(string.msg_no_internet)
   }
 
@@ -288,5 +301,4 @@ class IdeSetupConfigurationFragment : OnboardingFragment(), SlidePolicy {
       backgroundDataRestrictionReceiver = null
     }
   }
-
 }

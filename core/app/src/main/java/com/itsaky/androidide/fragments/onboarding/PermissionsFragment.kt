@@ -58,10 +58,12 @@ class PermissionsFragment : OnboardingMultiActionFragment(), SlidePolicy {
   }
 
   companion object {
-
-    private var permissionDenyCount = 0
+    
     private const val MAX_DENIAL_COUNT = 3
-
+    private var permissionDenyCount = 1
+    private val isToSkipPermission: Boolean
+      get() = permissionDenyCount >= MAX_DENIAL_COUNT
+    
     @JvmStatic
     fun newInstance(context: Context): PermissionsFragment {
       return PermissionsFragment().apply {
@@ -91,7 +93,7 @@ class PermissionsFragment : OnboardingMultiActionFragment(), SlidePolicy {
 
     @JvmStatic
     fun areAllPermissionsGranted(context: Context) : Boolean {
-         if (permissionDenyCount < MAX_DENIAL_COUNT) {
+         if (isToSkipPermission) {
              return getRequiredPermissions(context).all { it.isGranted }
          } else {
              return true
@@ -117,7 +119,7 @@ class PermissionsFragment : OnboardingMultiActionFragment(), SlidePolicy {
     @JvmStatic
     fun isPermissionGranted(context: Context, permission: String): Boolean {
 
-     if (permissionDenyCount < MAX_DENIAL_COUNT) {
+     if (isToSkipPermission) {
       return when (permission) {
         Manifest.permission_group.STORAGE -> isStoragePermissionGranted(context)
         Manifest.permission.REQUEST_INSTALL_PACKAGES -> context.packageManager.canRequestPackageInstalls()
@@ -171,7 +173,7 @@ class PermissionsFragment : OnboardingMultiActionFragment(), SlidePolicy {
 
   override val isPolicyRespected: Boolean
     get() {
-         if (permissionDenyCount < MAX_DENIAL_COUNT) {
+         if (isToSkipPermission) {
              return permissions.all { it.isGranted }
          } else {
              return true
@@ -179,7 +181,7 @@ class PermissionsFragment : OnboardingMultiActionFragment(), SlidePolicy {
     }
 
   override fun onUserIllegallyRequestedNextPage() {
-    permissionDenyCount+=1
+    if (!isToSkipPermission) permissionDenyCount += 1
     activity?.flashError(R.string.msg_grant_permissions)
-  }
+  } 
 }
