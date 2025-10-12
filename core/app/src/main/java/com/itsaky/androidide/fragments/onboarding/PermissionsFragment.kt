@@ -93,7 +93,7 @@ class PermissionsFragment : OnboardingMultiActionFragment(), SlidePolicy {
 
     @JvmStatic
     fun areAllPermissionsGranted(context: Context) : Boolean {
-         if (isToSkipPermission) {
+         if (!isToSkipPermission) {
              return getRequiredPermissions(context).all { it.isGranted }
          } else {
              return true
@@ -119,7 +119,7 @@ class PermissionsFragment : OnboardingMultiActionFragment(), SlidePolicy {
     @JvmStatic
     fun isPermissionGranted(context: Context, permission: String): Boolean {
 
-     if (isToSkipPermission) {
+     if (!isToSkipPermission) {
       return when (permission) {
         Manifest.permission_group.STORAGE -> isStoragePermissionGranted(context)
         Manifest.permission.REQUEST_INSTALL_PACKAGES -> context.packageManager.canRequestPackageInstalls()
@@ -173,7 +173,7 @@ class PermissionsFragment : OnboardingMultiActionFragment(), SlidePolicy {
 
   override val isPolicyRespected: Boolean
     get() {
-         if (isToSkipPermission) {
+         if (!isToSkipPermission) {
              return permissions.all { it.isGranted }
          } else {
              return true
