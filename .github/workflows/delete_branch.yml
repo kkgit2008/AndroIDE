@@ -1,12 +1,13 @@
+### TIME:251031
+
+
+
+
 name: Delete Any Branch
 
 on:
   workflow_dispatch:
     inputs:
-      branch_to_delete:
-        description: 'Branch to delete'
-        required: true
-        default: 'kkgit2008-patch-1'
       tip1:
         description: 'Tip 1'
         required: false
@@ -15,6 +16,10 @@ on:
         description: 'Tip 2'
         required: false
         default: 'Run on default branch, DO NOT change!'
+      branch_to_delete:
+        description: 'Branch to delete'
+        required: true
+        default: 'kkgit2008-patch-1'
 
 jobs:
   delete:

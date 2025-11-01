@@ -55,7 +55,7 @@ jobs:
             TITLE_SUFFIX=""
           else
             DATE=$(date +%Y%m%d)
-            TITLE_SUFFIX=" dev${DATE}"
+            TITLE_SUFFIX="-pre-${DATE}"
           fi
           TITLE=$(echo "$CONTENT" | grep '^TITLE=' | cut -d= -f2- | sed 's/^[[:space:]]*//;s/[[:space:]]*$//' || true)
           if [ -z "$TITLE" ]; then
@@ -81,7 +81,7 @@ jobs:
           RAW_TAG="${{ steps.info.outputs.ver_name }}"
           PRERELEASE="${{ steps.info.outputs.prerelease }}"
           SHORT_SHA="${{ steps.sha.outputs.short_sha }}"
-          TAG_SUFFIX="-dev-${SHORT_SHA}"
+          TAG_SUFFIX="-pre-${SHORT_SHA}"
           if [ "$PRERELEASE" = "false" ]; then
             echo "final_tag=${RAW_TAG}" >> $GITHUB_OUTPUT
           else

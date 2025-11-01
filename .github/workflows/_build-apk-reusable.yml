@@ -94,16 +94,16 @@ jobs:
           if [ "$PRERELEASE" = "false" ]; then
             VER_SUFFIX=""
           elif [ '${{ inputs.build_type }}' = "release" ]; then
-            VER_SUFFIX="-dev-$SHA"
+            VER_SUFFIX="-preRelease-$SHA"
           else
-            VER_SUFFIX="-devDebug-$SHA"
+            VER_SUFFIX="-preDebug-$SHA"
           fi
           echo "ver_suffix=$VER_SUFFIX" >> $GITHUB_OUTPUT
 
           # ---- Publish Only ----
           if [ '${{ inputs.override_releaseOrBuild }}' = "true" ]; then
             TITLE='${{ inputs.override_title }}'
-            #[ -z "$TITLE" ] && TITLE="${VER_NAME} dev$(date +%Y%m%d)"
+            #[ -z "$TITLE" ] && TITLE="${VER_NAME}-pre-$(date +%Y%m%d)"
             echo "title=$TITLE" >> $GITHUB_OUTPUT
 
             BRANCH='${{ inputs.override_branch }}'
