@@ -17,7 +17,7 @@
 ## ---------------------------------------------------------------------------
 ## [Optional] [Only for release]
 ## ---------------------------------------------------------------------------
-## Pre-release flag (false=stable & latest, true=beta/gray) (default "true")
+## Pre-release flag (false=stable/latest, true=beta/gray) (default "true")
 ## ---------------------------------------------------------------------------
 #PRERELEASE=false
 
