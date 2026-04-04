@@ -9,9 +9,9 @@
 ## ---------------------------------------------------------------------------
 ## [Optional] [Only for release]
 ## ---------------------------------------------------------------------------
-## Release title (default "VER_NAME -pre-$YYYYMMDD")
+## Release title (default "VER_NAME _pre-$YYYYMMDD")
 ## ---------------------------------------------------------------------------
-#TITLE=v2.7.1-beta3-pre-$YYYYMMDD
+#TITLE=v2.7.1-beta3_pre-$YYYYMMDD
 
 
 ## ---------------------------------------------------------------------------
@@ -51,6 +51,7 @@ NOTES=
 <details>
 <summary><b>🇨🇳 中文版变更日志（点击展开）</b></summary>
 
+- 将一个引起编译错误的依赖升级到可用版本
 - 默认不开启统计数据收集
 - ❗修复 首次启动时，手动安装SDK出现的GPG错误
 - 优化GitHub工作流，更方便使用，效率更高
@@ -71,6 +72,7 @@ NOTES=
 <details>
 <summary><b>🌏 English Changelog (Click to expand)</b></summary>
 
+- Fixed an error on one old version of the dependency
 - Set "Stats collection" disabled as default
 - ❗Fixed GPG errors when manually installing the SDK on first launch  
 - Optimized the GitHub workflow for greater convenience and efficiency  

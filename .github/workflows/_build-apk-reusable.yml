@@ -94,9 +94,9 @@ jobs:
           if [ "$PRERELEASE" = "false" ]; then
             VER_SUFFIX=""
           elif [ '${{ inputs.build_type }}' = "release" ]; then
-            VER_SUFFIX="-preRelease-$SHA"
+            VER_SUFFIX="_preRelease-$SHA"
           else
-            VER_SUFFIX="-preDebug-$SHA"
+            VER_SUFFIX="_preDebug-$SHA"
           fi
           echo "ver_suffix=$VER_SUFFIX" >> $GITHUB_OUTPUT
 
@@ -162,7 +162,7 @@ jobs:
           SRC=$(find "$APK_OUTPUT_DIR" -name "app-${{ inputs.abi_type }}-${{ inputs.build_type }}.apk" | head -n 1)
           [ -z "$SRC" ] && { echo "APK file not found (abi: ${{ inputs.abi_type }}, build: ${{ inputs.build_type }}) at path:$APK_OUTPUT_DIR"; exit 1; }
           #SRC=${{ env.APK_OUTPUT_DIR }}${{ inputs.build_type }}/app-${{ inputs.abi_type }}-${{ inputs.build_type }}.apk
-          DST=${{ env.ARTIFACT_OUTPUT_DIR }}${{ inputs.abi_type }}/AndroIDE-${{ inputs.abi_type }}-${{ steps.params.outputs.ver_name }}${{ steps.params.outputs.ver_suffix }}.apk
+          DST=${{ env.ARTIFACT_OUTPUT_DIR }}${{ inputs.abi_type }}/AndroIDE_${{ inputs.abi_type }}_${{ steps.params.outputs.ver_name }}${{ steps.params.outputs.ver_suffix }}.apk
           cp "$SRC" "$DST"
           sha256sum "$DST" > "$DST.sha256"
 
@@ -173,7 +173,7 @@ jobs:
       - name: Upload APK Artifact
         uses: actions/upload-artifact@v4
         with:
-          name: AndroIDE-${{ inputs.abi_type }}-${{ steps.params.outputs.ver_name }}${{ steps.params.outputs.ver_suffix }}
+          name: AndroIDE_${{ inputs.abi_type }}_${{ steps.params.outputs.ver_name }}${{ steps.params.outputs.ver_suffix }}
           path: ${{ env.ARTIFACT_OUTPUT_DIR }}${{ inputs.abi_type }}/*
 
       - name: Upload Mapping (release only)
