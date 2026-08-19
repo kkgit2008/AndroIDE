@@ -1,10 +1,13 @@
 
 # HOW TO BUILD
 
-
 * Fork this repo.
 
 * Run action 'Build APK'
+
+<p> </p>
+
+# OPTIONAL
 
 * If you want, you can edit app version code from 
 <a href="./composite-builds/build-logic/common/src/main/java/com/itsaky/androidide/build/config/ProjectConfig.kt"> here </a> at line 118
