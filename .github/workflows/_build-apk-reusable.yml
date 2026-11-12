@@ -119,14 +119,14 @@ jobs:
 
       # ---------- 1. checkout ----------
       - name: Checkout Code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
         with:
           submodules: recursive
           fetch-depth: 1
 
       # ---------- 2. JDK & Gradle ----------
       - name: Set Up JDK
-        uses: actions/setup-java@v4
+        uses: actions/setup-java@v6
         with:
           java-version: '17'
           distribution: 'temurin'
@@ -135,7 +135,7 @@ jobs:
         run: chmod +x ./gradlew
 
       - name: Restore Gradle Cache
-        uses: actions/cache@v4
+        uses: actions/cache@v6
         with:
           path: |
             ~/.gradle/caches
@@ -171,14 +171,14 @@ jobs:
 
       # ---------- 5. upload ----------
       - name: Upload APK Artifact
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: AndroIDE_${{ inputs.abi_type }}_${{ steps.params.outputs.ver_name }}${{ steps.params.outputs.ver_suffix }}
           path: ${{ env.ARTIFACT_OUTPUT_DIR }}${{ inputs.abi_type }}/*
 
       - name: Upload Mapping (release only)
         if: ${{ inputs.build_type == 'release' }}
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: release-mappings-${{ steps.params.outputs.short_sha }}
           path: '**/build/outputs/mapping'
