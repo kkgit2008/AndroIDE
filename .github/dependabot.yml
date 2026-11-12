@@ -1,0 +1,46 @@
+# To get started with Dependabot version updates, you'll need to specify which
+# package ecosystems to update and where the package manifests are located.
+# Please see the documentation for all configuration options:
+# https://docs.github.com/code-security/dependabot/dependabot-version-updates/configuration-options-for-the-dependabot.yml-file
+
+
+
+
+
+
+### TIME:261112
+
+
+
+### 此文件用于自动更新工作流版本
+
+version: 2
+
+updates:
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    ### 工作流文件通常位于仓库根目录的 .github/workflows 下
+    schedule:
+      interval: "weekly"
+      ### 每周检查更新
+    groups:
+      actions-dependencies:
+        patterns:
+          - "*"
+          ### 将所有 Actions 依赖合并为一个PR更新
+    commit-message:
+      prefix: "ci"
+      ### 提交消息前缀，标识为 CI 配置更新
+    #labels: 需要时再开启
+      #- "dependencies"
+      #- "github-actions"
+      ### 自定义标签便于分类
+    open-pull-requests-limit: 5
+    ### 限制同时打开的 PR 数量
+    #versioning-strategy: "increase"
+    ### 直接升级到最新版本（已不支持此字段）
+    #ignore: #需要时再开启
+      ### 如需忽略特定 Action 或版本，可在此添加规则
+      ### - dependency-name: "actions/checkout"
+      ###   versions: ["v5.x"]
+
