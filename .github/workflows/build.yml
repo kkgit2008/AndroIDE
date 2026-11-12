@@ -2,7 +2,16 @@ name: Build APK
 
 on:
   push:
-    #branches: [ "master", "main" ]
+    branches: [ "master", "main" ]
+    paths-ignore:
+      - '**.md'
+      - 'RELEASE_INFO'
+      - 'fastlane/**'
+      - '.github/workflows/*.yml'
+
+  pull_request:
+  ### 在 PR 时触发，用于验证（如 Dependabot 的 PR）
+    branches: [ "master", "main" ]
     paths-ignore:
       - '**.md'
       - 'RELEASE_INFO'
